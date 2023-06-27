@@ -20,8 +20,6 @@ class CalculatorView extends WatchUi.View {
     function drawInside(dc, x, y, pos, text) {
 		var width = dc.getWidth();
 		var height = dc.getHeight();
-        var w_separation = width / 3;
-        var h_separation = height / 5;
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         if (gHilight == pos) {
@@ -74,7 +72,7 @@ class CalculatorView extends WatchUi.View {
             case 1:
                 array1 = [" ( ", " ) ", "CA"];
                 array2 = [" + ", " - ", "CE"];
-                array3 = [" * ", " ÷ ", " = "];
+                array3 = [" * ", " ÷ ", " % "];
                 array = [array1, array2, array3];
 
                 drawInside(dc, width / 4 + width / 8, height - height / 10, 10, "MS");
