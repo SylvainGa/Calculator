@@ -1,0 +1,3 @@
+<layout id="GlanceLayout" scope="glance">
+    <label x="0" y="center" font="Graphics.FONT_SMALL" text="Calculator" color="Gfx.COLOR_WHITE" justification="Gfx.TEXT_JUSTIFY_LEFT" />
+</layout>

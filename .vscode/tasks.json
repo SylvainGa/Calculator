@@ -1,0 +1,20 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "monkeyc",
+			"device": "venu2",
+			"simulatorBuild": true,
+			"problemMatcher": [
+				"$monkeyc.error",
+				"$monkeyc.fileWarning",
+				"$monkeyc.genericWarning"
+			],
+			"label": "monkeyc: venu2",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		}
+	]
+}
