@@ -1,0 +1,14 @@
+<strings>
+    <string id="AppName">Calculatrice</string>
+    <string id="shortComplicationLabel">Calc</string>
+    <string id="longComplicationLabel">Calculator</string>
+
+    <string id="label_calculator1" scope="glance">Calculatrice\nDernier: </string>
+    <string id="label_calculator2" scope="glance">Calculatrice</string>
+
+    <string id="label_touch">Appuyez sur l'écran</string>
+	<string id="label_launch">pour démarrer</string>
+
+	<string id="label_divide0">Division par zéro</string>
+	<string id="label_invalid">Invalide</string>
+</strings>

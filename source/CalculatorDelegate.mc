@@ -100,7 +100,6 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (mOps_pos > 0) {
                                 mOps[mOps_pos - 1] = mOps[mOps_pos];
                                 mOps_pos--;
-                                calcPrevious(Oper_Equal);
                             }
                             mOps[mOps_pos + 1] = null;
                             break;
@@ -283,7 +282,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                                 break;
                                         }
                                         if (isFinite(rad) == false) {
-                                            gError = "Invalid";
+                                            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                                         }
 
                                         gAnswer = stripTrailinZeros(gDegRad == Degree ? Math.toDegrees(rad) : rad);
@@ -304,7 +303,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                         }
 
                                         if (isFinite(float) == false) {
-                                            gError = "Invalid";
+                                            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                                         }
                                         else {
                                             gAnswer = stripTrailinZeros(float);
@@ -314,7 +313,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     }
                                 }
                                 catch (e) {
-                                    gError = "Invalid";
+                                    gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                                 }
                             }
 
@@ -350,7 +349,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     }
 
                                     if (isFinite(float) == false) {
-                                        gError = "Invalid";
+                                        gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                                     }
                                     else {
                                         gAnswer = stripTrailinZeros(float);
@@ -359,7 +358,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     mOps[mOps_pos] = null;
                                }
                                 catch (e) {
-                                    gError = "Invalid";
+                                    gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                                 }
                             }
 
@@ -380,7 +379,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     mOps[mOps_pos] = null;
                                 }
                                 else {
-                                    gError = "Divide by zero";
+                                    gError = WatchUi.loadResource(Rez.Strings.label_divide0);
                                 }
                             }
 
@@ -405,7 +404,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     }
 
                                     if (isFinite(float) == false) {
-                                        gError = "Invalid";
+                                        gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                                     }
                                     else {
                                         gAnswer = stripTrailinZeros(float);
@@ -414,7 +413,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     mOps[mOps_pos] = null;
                                 }
                                 catch (e) {
-                                    gError = "Invalid";
+                                    gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                                 }
                             }
 
@@ -448,6 +447,9 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
             }
         }
         else {
+            if (mOps[mOps_pos] == null) {
+                mOps[mOps_pos] = gAnswer;
+            }
             if (mOps[mOps_pos] != null) {
                 calcPrevious(Oper_Equal);
                 gAnswer = stripTrailinZeros(mOps[mOps_pos]);
@@ -476,8 +478,22 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
             return;
         }
 
-        var left = mOps[mOps_pos - 2].toFloat();
-        var right = mOps[mOps_pos].toFloat();
+        var left;
+        var right;
+
+        try {
+            left = mOps[mOps_pos - 2].toFloat();
+            right = mOps[mOps_pos].toFloat();
+        }
+        catch (e) {
+            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+            return;
+        }
+
+        if (left == null || right == null) {
+            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+            return;
+        }
 
         if (oper == Oper_Percent) {
             right = left * right / 100.0;
@@ -485,31 +501,51 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
         switch (mOps[mOps_pos - 1]) {
             case Oper_Add:
+                if (oper == Oper_Multiply || oper == Oper_Divide || oper == Oper_Exponent) {
+                    return;
+                }
                 gAnswer = stripTrailinZeros(left + right);
-                mOps_pos -= 2;
+                mOps[mOps_pos] = null;
+                mOps_pos--;
+                mOps[mOps_pos] = null;
+                mOps_pos--;
                 mOps[mOps_pos] = gAnswer;
                 break;
 
             case Oper_Substract:
+                if (oper == Oper_Multiply || oper == Oper_Divide || oper == Oper_Exponent) {
+                    return;
+                }
                 gAnswer = stripTrailinZeros(left - right);
-                mOps_pos -= 2;
+                mOps[mOps_pos] = null;
+                mOps_pos--;
+                mOps[mOps_pos] = null;
+                mOps_pos--;
                 mOps[mOps_pos] = gAnswer;
                 break;
 
             case Oper_Multiply:
                 gAnswer = stripTrailinZeros(left * right);
-                mOps_pos -= 2;
+                mOps[mOps_pos] = null;
+                mOps_pos--;
+                mOps[mOps_pos] = null;
+                mOps_pos--;
                 mOps[mOps_pos] = gAnswer;
+                calcPrevious(oper);
                 break;
 
             case Oper_Divide:
                 if (right != 0.0) {
                     gAnswer = stripTrailinZeros(left / right);
-                    mOps_pos -= 2;
+                    mOps[mOps_pos] = null;
+                    mOps_pos--;
+                    mOps[mOps_pos] = null;
+                    mOps_pos--;
                     mOps[mOps_pos] = gAnswer;
+                    calcPrevious(oper);
                 }
                 else {
-                    gError = "Divide by zero";
+                    gError = WatchUi.loadResource(Rez.Strings.label_divide0);
                 }
                 break;
 
@@ -519,16 +555,23 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         gAnswer = stripTrailinZeros(Math.pow(left, 1.0 / right));
                     }
                     else {
-                        gError = "Divide by zero";
+                        gError = WatchUi.loadResource(Rez.Strings.label_divide0);
                     }
                 }
                 else {
                     gAnswer = stripTrailinZeros(Math.pow(left, right));
                 }
 
-                mOps_pos -= 2;
+                mOps[mOps_pos] = null;
+                mOps_pos--;
+                mOps[mOps_pos] = null;
+                mOps_pos--;
                 mOps[mOps_pos] = gAnswer;
+                calcPrevious(oper);
                 break;
+
+            case Oper_ParenOpen:
+                break; // Just a place holder so I know we saw it and nothing was done to it here
         }
     }
 
@@ -631,8 +674,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
         var height = System.getDeviceSettings().screenHeight;
         var v_separation = height / 5;
 
-        for (var ty = v_separation, i = 0; ty < height - v_separation * 2; ty += v_separation, i++) {
-            for (var tx = 0, j = 0; tx < width - h_separation; tx += h_separation, j++) {
+        for (var ty = v_separation, i = 0; ty <= height - v_separation * 2; ty += v_separation, i++) {
+            for (var tx = 0, j = 0; tx <= width - h_separation; tx += h_separation, j++) {
                 if (x > tx && x < tx + h_separation && y > ty && y < ty + v_separation) {
                     return i * 3 + j + 1; 
                 }

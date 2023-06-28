@@ -47,6 +47,8 @@ class CalculatorView extends WatchUi.View {
 		var height = dc.getHeight();
         var w_separation = width / 3;
         var h_separation = height / 5;
+        var screenShape = System.getDeviceSettings().screenShape;
+
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         dc.clear();
 
@@ -84,8 +86,8 @@ class CalculatorView extends WatchUi.View {
                 array3 = [" 1 ", " 2 ", " 3 "];
                 array = [array1, array2, array3];
 
-                drawInside(dc, width / 4 + width / 8, height - height / 10, 10, " 0 ", false);
-                drawInside(dc, width - width / 4 - width / 8, height - height / 10, 11, " . ", false);
+                drawInside(dc, width / 4 + (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 10, " 0 ", false);
+                drawInside(dc, width - width / 4 - (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 11, " . ", false);
                 break;
 
             case 1:
@@ -94,8 +96,8 @@ class CalculatorView extends WatchUi.View {
                 array3 = [" * ", " ÷ ", " % "];
                 array = [array1, array2, array3];
 
-                drawInside(dc, width / 4 + width / 8, height - height / 10, 10, "MS", false);
-                drawInside(dc, width - width / 4 - width / 8, height - height / 10, 11, "MR", false);
+                drawInside(dc, width / 4 + (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 10, "MS", false);
+                drawInside(dc, width - width / 4 - (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 11, "MR", false);
                 break;
 
             case 2:
@@ -104,8 +106,8 @@ class CalculatorView extends WatchUi.View {
                 array3 = ["Log", "Ln", "1/x"];
                 array = [array1, array2, array3];
 
-                drawInside(dc, width / 4 + width / 8, height - height / 10, 10, "x^2", false);
-                drawInside(dc, width - width / 4 - width / 8, height - height / 10, 11, "x^y", false);
+                drawInside(dc, width / 4 + (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 10, "x^2", false);
+                drawInside(dc, width - width / 4 - (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 11, "x^y", false);
                 break;
         }
 
@@ -125,12 +127,12 @@ class CalculatorView extends WatchUi.View {
 
         if (gError != null) {
             dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(width / 2, height / 10, Graphics.FONT_SMALL, gError, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(width / 2, screenShape == System.SCREEN_SHAPE_RECTANGLE ? height / 16 : height / 11, Graphics.FONT_SMALL, gError, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
         }
         else {
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(width / 2, height / 10, Graphics.FONT_SMALL, (gAnswer != null ? gAnswer : "0"), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(width / 2, screenShape == System.SCREEN_SHAPE_RECTANGLE ? height / 16 : height / 11, Graphics.FONT_SMALL, (gAnswer != null ? gAnswer : "0"), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
             if (gAnswer != null) {
                  Storage.setValue("answer", gAnswer);
             }
@@ -139,10 +141,10 @@ class CalculatorView extends WatchUi.View {
         if (gMemory != null || gCurrentHistoryIncIndex != null) {
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
             if (gCurrentHistoryIncIndex == null) {
-                dc.drawText(width / 3 - width / 6 , height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 1, Graphics.FONT_XTINY, "M=" + stripTrailinZeros(gMemory), Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, "M=" + stripTrailinZeros(gMemory), Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
             }
             else {
-                dc.drawText(width / 3 - width / 6 , height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 1, Graphics.FONT_XTINY, "HISTORY=" + gCurrentHistoryIncIndex, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, "H=" + gCurrentHistoryIncIndex, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
             }
         }
     }

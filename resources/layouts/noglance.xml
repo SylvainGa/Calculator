@@ -1,0 +1,9 @@
+<layout id="NoGlanceLayout">
+    <drawable id="logo" class="WatchUi.Bitmap">
+        <param name="locX">center</param>
+        <param name="locY">48</param>
+        <param name="rezId">@Drawables.LauncherIcon</param>
+    </drawable>
+    <label x="center" y="130" font="Graphics.FONT_SMALL" text="@Strings.label_touch" color="Gfx.COLOR_WHITE" justification="Gfx.TEXT_JUSTIFY_CENTER" />
+    <label x="center" y="160" font="Graphics.FONT_SMALL" text="@Strings.label_launch" color="Gfx.COLOR_WHITE" justification="Gfx.TEXT_JUSTIFY_CENTER" />
+</layout>

@@ -1,9 +1,9 @@
 import Toybox.Application;
-import Toybox.Background;
 import Toybox.Lang;
 import Toybox.WatchUi;
 import Toybox.Complications;
 import Toybox.Attention;
+using Toybox.Application.Storage;
 
 //(:background)
 class CalculatorApp extends Application.AppBase {
@@ -30,11 +30,18 @@ class CalculatorApp extends Application.AppBase {
 
     // Return the initial view of your application here
     function getInitialView() as Array<Views or InputDelegates>? {
-        return [ new CalculatorView(), new CalculatorDelegate() ] as Array<Views or InputDelegates>;
+        if (Storage.getValue("fromGlance")) { // Swipe gestures only work when launched from Glance for the main view, hence why we need a subview with watches that don't support Glance or not launched from Glance
+            Storage.setValue("fromGlance", false); // In case we stop launching from Glance
+            return [ new CalculatorView(), new CalculatorDelegate() ] as Array<Views or InputDelegates>;
+        }
+        else { // Sucks, but we have to have an extra view so swipe gestures work in our main view
+            return [ new NoGlanceView(), new NoGlanceDelegate() ];
+        }
     }
 
     (:glance)
     function getGlanceView() {
+        Storage.setValue("fromGlance", true);
         return [ new GlanceView() ];
     }
 }

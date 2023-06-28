@@ -2,4 +2,13 @@
     <string id="AppName">Calculator</string>
     <string id="shortComplicationLabel">Calc</string>
     <string id="longComplicationLabel">Calculator</string>
+
+    <string id="label_calculator1" scope="glance">Calculator\nLatest: </string>
+    <string id="label_calculator2" scope="glance">Calculator</string>
+
+    <string id="label_touch">Touch Screen</string>
+	<string id="label_launch">to launch</string>
+
+	<string id="label_divide0">Divide by zero</string>
+	<string id="label_invalid">Invalid</string>
 </strings>
