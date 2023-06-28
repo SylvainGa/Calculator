@@ -2,6 +2,7 @@ import Toybox.WatchUi;
 import Toybox.Timer;
 import Toybox.Math;
 using Toybox.Application.Storage;
+using Toybox.Application.Properties;
 
 const GRID_COUNT = 2;
 
@@ -32,6 +33,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
     var mTimer;
     var mOps = new [100];
     var mOps_pos; 
+    var mHistorySize;
+    var mCountHistory;
 
     function initialize() {
         BehaviorDelegate.initialize();
@@ -41,6 +44,19 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
         }
     
         mOps_pos = 0;
+        mCountHistory = true;
+
+        try {
+            mHistorySize = Properties.getValue("historySize");
+        }
+        catch (e) {
+            mHistorySize = 10;
+            Properties.setValue("historySize", mHistorySize);
+        }
+
+        if (mHistorySize == null) {
+            mHistorySize = 10;
+        }
     }
 
     function onSelect() {
@@ -87,6 +103,10 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                     switch (gHilight) {
                         case 1: // ParenOpen
                             // We just tag its place in the queue so ParenClose can do its thing
+                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
+                                gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                                break;
+                            }
                             mOps[mOps_pos] = Oper_ParenOpen;
                             mOps_pos++;
                             mOps[mOps_pos] = null;
@@ -105,10 +125,13 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             break;
 
                         case 3: // CA
+                            for (var i = 0; i < mOps.size(); i++) {
+                                mOps[i] = null;
+                            }
                             mOps_pos = 0;
-                            mOps[mOps_pos] = null;
                             gAnswer = null;
                             gError = null;
+                            gInvActive = false;
                             break;
 
                         case 4: // Add
@@ -453,16 +476,40 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
             if (mOps[mOps_pos] != null) {
                 calcPrevious(Oper_Equal);
                 gAnswer = stripTrailinZeros(mOps[mOps_pos]);
-                var index = Storage.getValue("HistoryIndex");
-                if (index == null) {
-                    index = 0;
+                // See if we have empty slots for our history
+                if (mCountHistory) {
+                    var count = 0;
+                    for (var i = 0; i < mHistorySize; i++) {
+                        if (Storage.getValue("history_" + i) != null) {
+                            count++;
+                        }
+                    }
+
+                    // If we have less history value than our requested size, add to the end
+                    if (count < mHistorySize) {
+                        gCurrentHistoryIndex = count;
+                    }
+                    // Otherwise use the current position and don't count again
+                    else {
+                        mCountHistory = false;
+                        gCurrentHistoryIndex = Storage.getValue("HistoryIndex");
+                    }
                 }
-                Storage.setValue("history_" + index, gAnswer);
-                index++;
-                if (index >= 10) {
-                    index = 0;
+                else {
+                    gCurrentHistoryIndex = Storage.getValue("HistoryIndex");
                 }
-                Storage.setValue("HistoryIndex", index);
+
+                if (gCurrentHistoryIndex == null || gCurrentHistoryIndex >= mHistorySize) {
+                    gCurrentHistoryIndex = 0;
+                }
+                Storage.setValue("history_" + gCurrentHistoryIndex, gAnswer);
+                gCurrentHistoryIndex++;
+                if (gCurrentHistoryIndex >= mHistorySize) {
+                    gCurrentHistoryIndex = 0;
+                }
+                Storage.setValue("HistoryIndex", gCurrentHistoryIndex);
+                gCurrentHistoryIncIndex = null;
+
                 mOps_pos = 0;
                 mOps[mOps_pos] = null;
             }
@@ -600,68 +647,108 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
             }
         }
         else if (swipeEvent.getDirection() == WatchUi.SWIPE_UP) {
+            if (mHistorySize == 0) {
+                return false;
+            }
+
             var index;
-            if (gCurrentHistoryIndex != null) {
+            if (gCurrentHistoryIndex != null) { // We've been through this path already, grab where we were at
+                if (gCurrentHistoryIncIndex == null) {
+                    gCurrentHistoryIncIndex = 1;
+                }
                 index = gCurrentHistoryIndex;
             }
             else {
-                gCurrentHistoryIncIndex = 0;
+                gCurrentHistoryIncIndex = 1; // First time around. Start from where we'll store our next answer
                 index = Storage.getValue("HistoryIndex");
             }
             if (index == null) {
-                index = 0;
+                index = 1; // We will decrement it to 0 in the do/while loop below
             }
 
             var start = index;
             var answer;
             do {
                 index--;
-                if (index < 0) {
-                    index = 9;
+                if (index < 0) { // Wrap around if we've hit the top of our list
+                    index = mHistorySize - 1;
                 }
                 answer = Storage.getValue("history_" + index);
             } while (answer == null && index != start);
 
-            gCurrentHistoryIndex = index;
             if (answer != null) {
-                gCurrentHistoryIncIndex--;
-                if (gCurrentHistoryIncIndex < 1) {
-                    gCurrentHistoryIncIndex = 10;
+                gCurrentHistoryIndex = index; // This is the one we're at now. Keep for the next swipe up/down
+                gCurrentHistoryIncIndex--; // We got a new one so decrease our index on screen
+                if (gCurrentHistoryIncIndex < 0) {
+                    // Need to find the quantity of non null in our history list
+                    var count = 0;
+                    for (var i = 0; i < mHistorySize; i++) {
+                        if (Storage.getValue("history_" + i) != null) {
+                            count++;
+                        }
+                    }
+                    gCurrentHistoryIncIndex = count - 1;
                 }
+                gAnswer = answer;
             }
-            gAnswer = answer;
+            else {
+                gCurrentHistoryIncIndex = null;
+            }
         }
         else if (swipeEvent.getDirection() == WatchUi.SWIPE_DOWN) {
+            if (mHistorySize == 0) {
+                return false;
+            }
+
             var index;
-            if (gCurrentHistoryIndex != null) {
+            if (gCurrentHistoryIndex != null) { // We've been through this path already, grab where we were at
+                if (gCurrentHistoryIncIndex == null) {
+                    gCurrentHistoryIncIndex = 0;
+                }
                 index = gCurrentHistoryIndex;
             }
             else {
-                gCurrentHistoryIncIndex = 0;
+                gCurrentHistoryIncIndex = 0; // First time around. Start from where we'll store our next answer
                 index = Storage.getValue("HistoryIndex");
             }
-            if (index == null) {
-                index = 0;
+            if (index == null || index >= mHistorySize) {
+                index = -1; // We'll increase it to 0 in the do/while loop below
             }
 
+            // Find the next non null entry in our history
             var start = index;
             var answer;
             do {
-                answer = Storage.getValue("history_" + index);
-                index++;
-                if (index >= 10) {
+                index++; // Get the next one since we point to the current one
+                if (index >= mHistorySize) {
+                    if (start == -1) {
+                        start = index;
+                        break;
+                    }
                     index = 0;
                 }
+
+                answer = Storage.getValue("history_" + index);
+
             } while (answer == null && index != start);
 
-            gCurrentHistoryIndex = index;
             if (answer != null) {
-                gCurrentHistoryIncIndex++;
-                if (gCurrentHistoryIncIndex > 10) {
-                    gCurrentHistoryIncIndex = 1;
+                gCurrentHistoryIndex = index; // This is the one we're at now. Keep for the next swipe up/down
+                gCurrentHistoryIncIndex++; // We got a new one so increase our index on screen
+                var count = 0;
+                for (var i = 0; i < mHistorySize; i++) {
+                    if (Storage.getValue("history_" + i) != null) {
+                        count++;
+                    }
                 }
+                if (gCurrentHistoryIncIndex > count - 1) {
+                    gCurrentHistoryIncIndex = 0;
+                }
+                gAnswer = answer;
             }
-            gAnswer = answer;
+            else {
+                gCurrentHistoryIncIndex = null;
+            }
         }
         WatchUi.requestUpdate();
 

@@ -1,5 +1,6 @@
 <strings>
     <string id="AppName">Calculator</string>
+    <string id="AppNameVersion">Calculator V1.0.0</string>
     <string id="shortComplicationLabel">Calc</string>
     <string id="longComplicationLabel">Calculator</string>
 
@@ -11,4 +12,6 @@
 
 	<string id="label_divide0">Divide by zero</string>
 	<string id="label_invalid">Invalid</string>
+	
+	<string id="setting_historySize">Size of history buffer</string>
 </strings>

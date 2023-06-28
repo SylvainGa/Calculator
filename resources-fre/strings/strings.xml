@@ -11,4 +11,6 @@
 
 	<string id="label_divide0">Division par zéro</string>
 	<string id="label_invalid">Invalide</string>
+
+	<string id="setting_historySize">Dimension de l'historique des résultats</string>
 </strings>

@@ -1,0 +1,9 @@
+<settings>
+	<setting propertyKey="@Properties.AppVersion" title="@Strings.AppNameVersion">
+		<settingConfig type="alphaNumeric" readonly="true"/>
+	</setting>
+
+    <setting propertyKey="@Properties.historySize" title="@Strings.setting_historySize">
+		<settingConfig type="numeric" min="0" max="50" required="true"/>
+    </setting>
+</settings>
