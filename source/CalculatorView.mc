@@ -1,9 +1,19 @@
 import Toybox.Graphics;
 import Toybox.WatchUi;
+import Toybox.Lang;
+using Toybox.Application.Storage;
 
-var gAnswer = 0.0;
+enum { Degree, Radian }
+
+var gAnswer = null;
 var gGrid = 0;
 var gHilight = 0;
+var gMemory = null;
+var gError = null;
+var gDegRad = Degree;
+var gInvActive = false;
+var gCurrentHistoryIndex = null;
+var gCurrentHistoryIncIndex = null;
 
 class CalculatorView extends WatchUi.View {
 
@@ -17,12 +27,9 @@ class CalculatorView extends WatchUi.View {
         }
     }
 
-    function drawInside(dc, x, y, pos, text) {
-		var width = dc.getWidth();
-		var height = dc.getHeight();
-
+    function drawInside(dc, x, y, pos, text, perm_hilight) {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
-        if (gHilight == pos) {
+        if (gHilight == pos || perm_hilight == true) {
             dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_WHITE);
         }
         else {
@@ -43,15 +50,27 @@ class CalculatorView extends WatchUi.View {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         dc.clear();
 
+        // Draw Vertical separations
         for (var i = 1; i < 3; i++) {
-            dc.drawLine(w_separation * i, h_separation, w_separation * i, height - h_separation);
+            dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_BLACK);
+            dc.fillRectangle(w_separation * i - 3, h_separation, 6, 3 * h_separation);
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
+            dc.fillRectangle(w_separation * i - 1, h_separation, 2, 3 * h_separation);
         }
 
+        // Draw Horizontal separations
         for (var i = 1; i < 5; i++) {
-            dc.drawLine(0, h_separation * i, width, h_separation * i);
+            dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_BLACK);
+            dc.fillRectangle(0, h_separation * i - 3, width, 6);
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
+            dc.fillRectangle(0, h_separation * i - 1, width, 2);
         }
 
-        dc.drawLine(width / 2, height - h_separation, width / 2, height);
+        // Draw bottom Vertical separation
+        dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_BLACK);
+        dc.fillRectangle(width / 2 - 3, height - h_separation + 2, 6, h_separation);
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
+        dc.fillRectangle(width / 2 - 1, height - h_separation + 2, 2, h_separation);
 
         var array1;
         var array2;
@@ -65,28 +84,95 @@ class CalculatorView extends WatchUi.View {
                 array3 = [" 1 ", " 2 ", " 3 "];
                 array = [array1, array2, array3];
 
-                drawInside(dc, width / 4 + width / 8, height - height / 10, 10, " 0 ");
-                drawInside(dc, width - width / 4 - width / 8, height - height / 10, 11, " . ");
+                drawInside(dc, width / 4 + width / 8, height - height / 10, 10, " 0 ", false);
+                drawInside(dc, width - width / 4 - width / 8, height - height / 10, 11, " . ", false);
                 break;
 
             case 1:
                 array1 = [" ( ", " ) ", "CA"];
-                array2 = [" + ", " - ", "CE"];
+                array2 = [" + ", " - ", "DD"];
                 array3 = [" * ", " ÷ ", " % "];
                 array = [array1, array2, array3];
 
-                drawInside(dc, width / 4 + width / 8, height - height / 10, 10, "MS");
-                drawInside(dc, width - width / 4 - width / 8, height - height / 10, 11, "MR");
+                drawInside(dc, width / 4 + width / 8, height - height / 10, 10, "MS", false);
+                drawInside(dc, width - width / 4 - width / 8, height - height / 10, 11, "MR", false);
+                break;
+
+            case 2:
+                array1 = ["INV", (gDegRad == Degree ? "DEG" : "RAD"), "Pi"];
+                array2 = ["SIN", "COS", "TAN"];
+                array3 = ["Log", "Ln", "1/x"];
+                array = [array1, array2, array3];
+
+                drawInside(dc, width / 4 + width / 8, height - height / 10, 10, "x^2", false);
+                drawInside(dc, width - width / 4 - width / 8, height - height / 10, 11, "x^y", false);
                 break;
         }
 
         for (var row = 0; row < 3; row++) {
             for (var col = 0; col < 3; col++) {
-                drawInside(dc, width / 3 * col + width / 6, height / 5 * (row + 1) + height / 10, row * 3 + col + 1, array[row][col]);
+                if (gGrid == 2 && row == 0 && col == 0) {
+                    drawInside(dc, width / 3 * col + width / 6, height / 5 * (row + 1) + height / 10, row * 3 + col + 1, array[row][col], gInvActive);
+                }
+                else {
+                    drawInside(dc, width / 3 * col + width / 6, height / 5 * (row + 1) + height / 10, row * 3 + col + 1, array[row][col], false);
+                }
             }
         }
 
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
-        dc.drawText(width / 2, height / 10, Graphics.FONT_SMALL, gAnswer, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_DK_GRAY);
+        dc.fillRectangle(0, 0, width, h_separation - 2);
+
+        if (gError != null) {
+            dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(width / 2, height / 10, Graphics.FONT_SMALL, gError, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+
+        }
+        else {
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(width / 2, height / 10, Graphics.FONT_SMALL, (gAnswer != null ? gAnswer : "0"), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            if (gAnswer != null) {
+                 Storage.setValue("answer", gAnswer);
+            }
+        }
+
+        if (gMemory != null || gCurrentHistoryIncIndex != null) {
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            if (gCurrentHistoryIncIndex == null) {
+                dc.drawText(width / 3 - width / 6 , height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 1, Graphics.FONT_XTINY, "M=" + stripTrailinZeros(gMemory), Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+            }
+            else {
+                dc.drawText(width / 3 - width / 6 , height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 1, Graphics.FONT_XTINY, "HISTORY=" + gCurrentHistoryIncIndex, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+            }
+        }
     }
+}
+
+function stripTrailinZeros(number) {
+    var dotPos;
+    var numberStr = number.toDouble().toString();
+
+    dotPos = numberStr.find(".");
+    if (dotPos == null) {
+        numberStr = number.toNumber();
+    }
+    else {
+        var numberArray = numberStr.toCharArray(); 
+        var i;
+        for (i = numberStr.length() - 1; i > dotPos; i--) {
+            if (numberArray[i] != '0') {
+                break;
+            }
+        }
+        if (numberArray[i] == '.') {
+            i--;
+        }
+
+        numberStr = numberStr.substring(0, i + 1);
+    }
+
+    if (numberStr instanceof Lang.String && numberStr.equals("-0")) {
+        numberStr = "0";
+    }
+    return numberStr.toString();
 }
