@@ -4,8 +4,6 @@ import Toybox.Math;
 using Toybox.Application.Storage;
 using Toybox.Application.Properties;
 
-const GRID_COUNT = 2;
-
 enum { Oper_DOT = 0,
        Oper_ParenOpen,
        Oper_ParenClose,
@@ -76,8 +74,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
         gHilight = findTapPos(x, y);
         if (gHilight > 0) {
-            switch (gGrid) {
-                case 0:
+            switch (gPanelOrder[gGrid - 1]) {
+                case 1:
                     array = ["N/A", "7", "8", "9", "4", "5", "6", "1", "2", "3", "0", Oper_DOT ];
                     if (mOps[mOps_pos] == null || mOps[mOps_pos].equals("0")) {
                         if (array[gHilight] == Oper_DOT) {
@@ -99,7 +97,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
                     break;
 
-                case 1:
+                case 2:
                     switch (gHilight) {
                         case 1: // ParenOpen
                             // We just tag its place in the queue so ParenClose can do its thing
@@ -265,7 +263,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                     }
                     break;
 
-                case 2:
+                case 3:
                     switch (gHilight) {
                         case 1: // INV
                             gInvActive = !gInvActive;
@@ -467,6 +465,205 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             break;
 
                     }
+                    break;
+
+                case 4:
+                    switch (gHilight) {
+                        case 1: // INV
+                            gInvActive = !gInvActive;
+                            break;
+
+                        case 2: // Imp/USA
+                            gConvUnit = (gConvUnit == Imperial ? USA : Imperial);
+                            break;
+
+                        case 3: // F->C
+                            // If we didn't type a number, use what's on the display for the first number
+                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
+                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            }
+                            // We currently have something in the input queue and that something is a 'number' (shown as a string)
+                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
+                                var float = mOps[mOps_pos].toFloat();
+                                if (gInvActive) {
+                                    float = float * 9.0 / 5.0;
+                                    float += 32.0;
+                                    gAnswer = stripTrailinZeros(float);
+                                }
+                                else {
+                                    float -= 32.0;
+                                    float = float * 5.0 / 9.0;
+                                    gAnswer = stripTrailinZeros(float);
+                                }
+                                mOps[mOps_pos] = null;
+                            }
+
+                            gInvActive = false;
+                            break;
+
+                        case 4: // GAL/LITRE
+                            // If we didn't type a number, use what's on the display for the first number
+                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
+                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            }
+                            // We currently have something in the input queue and that something is a 'number' (shown as a string)
+                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
+                                var float = mOps[mOps_pos].toFloat();
+                                var convUnit = (gConvUnit == Imperial ? 4.54609 : 3.78541);
+                                if (gInvActive) {
+                                    gAnswer = stripTrailinZeros(float / convUnit);
+                                }
+                                else {
+                                    gAnswer = stripTrailinZeros(float * convUnit);
+                                }
+                                mOps[mOps_pos] = null;
+                            }
+
+                            gInvActive = false;
+                            break;
+
+                        case 5: // OZ/ML
+                            // If we didn't type a number, use what's on the display for the first number
+                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
+                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            }
+                            // We currently have something in the input queue and that something is a 'number' (shown as a string)
+                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
+                                var float = mOps[mOps_pos].toFloat();
+                                if (gInvActive) {
+                                    gAnswer = stripTrailinZeros(float / 29.5735);
+                                }
+                                else {
+                                    gAnswer = stripTrailinZeros(float * 29.5735);
+                                }
+                                mOps[mOps_pos] = null;
+                            }
+
+                            gInvActive = false;
+                            break;
+
+                        case 6: // CUP/ML
+                            // If we didn't type a number, use what's on the display for the first number
+                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
+                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            }
+                            // We currently have something in the input queue and that something is a 'number' (shown as a string)
+                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
+                                var float = mOps[mOps_pos].toFloat();
+                                var convUnit = (gConvUnit == Imperial ? 284.131 : 240);
+                                if (gInvActive) {
+                                    gAnswer = stripTrailinZeros(float / convUnit);
+                                }
+                                else {
+                                    gAnswer = stripTrailinZeros(float * convUnit);
+                                }
+                                mOps[mOps_pos] = null;
+                            }
+
+                            gInvActive = false;
+                            break;
+
+                        case 7: // MILE/KM
+                            // If we didn't type a number, use what's on the display for the first number
+                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
+                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            }
+                            // We currently have something in the input queue and that something is a 'number' (shown as a string)
+                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
+                                var float = mOps[mOps_pos].toFloat();
+                                if (gInvActive) {
+                                    gAnswer = stripTrailinZeros(float / 1.60934);
+                                }
+                                else {
+                                    gAnswer = stripTrailinZeros(float * 1.60934);
+                                }
+                                mOps[mOps_pos] = null;
+                            }
+
+                            gInvActive = false;
+                            break;
+
+                        case 8: // FT/CM
+                            // If we didn't type a number, use what's on the display for the first number
+                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
+                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            }
+                            // We currently have something in the input queue and that something is a 'number' (shown as a string)
+                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
+                                var float = mOps[mOps_pos].toFloat();
+                                if (gInvActive) {
+                                    gAnswer = stripTrailinZeros(float / 30.48);
+                                }
+                                else {
+                                    gAnswer = stripTrailinZeros(float * 30.48);
+                                }
+                                mOps[mOps_pos] = null;
+                            }
+
+                            gInvActive = false;
+                            break;
+
+                        case 9: // LB/KG
+                            // If we didn't type a number, use what's on the display for the first number
+                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
+                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            }
+                            // We currently have something in the input queue and that something is a 'number' (shown as a string)
+                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
+                                var float = mOps[mOps_pos].toFloat();
+                                if (gInvActive) {
+                                    gAnswer = stripTrailinZeros(float / 0.453592);
+                                }
+                                else {
+                                    gAnswer = stripTrailinZeros(float * 0.453592);
+                                }
+                                mOps[mOps_pos] = null;
+                            }
+
+                            gInvActive = false;
+                            break;
+
+                        case 10: // MPH/KMH
+                            // If we didn't type a number, use what's on the display for the first number
+                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
+                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            }
+                            // We currently have something in the input queue and that something is a 'number' (shown as a string)
+                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
+                                var float = mOps[mOps_pos].toFloat();
+                                if (gInvActive) {
+                                    gAnswer = stripTrailinZeros(float / 1.60934);
+                                }
+                                else {
+                                    gAnswer = stripTrailinZeros(float * 1.60934);
+                                }
+                                mOps[mOps_pos] = null;
+                            }
+
+                            gInvActive = false;
+                            break;
+
+                        case 11: // ACRE/M2
+                            // If we didn't type a number, use what's on the display for the first number
+                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
+                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            }
+                            // We currently have something in the input queue and that something is a 'number' (shown as a string)
+                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
+                                var float = mOps[mOps_pos].toFloat();
+                                if (gInvActive) {
+                                    gAnswer = stripTrailinZeros(float / 4046.86);
+                                }
+                                else {
+                                    gAnswer = stripTrailinZeros(float * 4046.86);
+                                }
+                                mOps[mOps_pos] = null;
+                            }
+
+                            gInvActive = false;
+                            break;
+                    }
+                    break;
             }
         }
         else {
@@ -637,12 +834,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
         if (swipeEvent.getDirection() == WatchUi.SWIPE_LEFT) {
             gGrid++;
             if (gGrid > GRID_COUNT) {
-                gGrid = 0;
+                gGrid = 1;
             }
         }
         else if (swipeEvent.getDirection() == WatchUi.SWIPE_RIGHT) {
             gGrid--;
-            if (gGrid < 0) {
+            if (gGrid < 1) {
                 gGrid = GRID_COUNT;
             }
         }

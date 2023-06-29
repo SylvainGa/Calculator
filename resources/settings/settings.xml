@@ -6,4 +6,8 @@
     <setting propertyKey="@Properties.historySize" title="@Strings.setting_historySize">
 		<settingConfig type="numeric" min="0" max="50" required="true"/>
     </setting>
+
+    <setting propertyKey="@Properties.panelOrder" title="@Strings.setting_panelOrder">
+		<settingConfig type="alphaNumeric" readonly="true"/>
+    </setting>
 </settings>

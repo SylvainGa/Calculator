@@ -1,4 +1,5 @@
 <properties>
 	<property id="AppVersion" type="string"></property>
 	<property id="historySize" type="number">10</property>
+	<property id="panelOrder" type="string">1,2,3,4</property>
 </properties>

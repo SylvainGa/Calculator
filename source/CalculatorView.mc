@@ -2,40 +2,60 @@ import Toybox.Graphics;
 import Toybox.WatchUi;
 import Toybox.Lang;
 using Toybox.Application.Storage;
+using Toybox.Application.Properties;
+
+const GRID_COUNT = 4;
 
 enum { Degree, Radian }
+enum { Imperial, USA }
 
 var gAnswer = null;
-var gGrid = 0;
+var gGrid = 1;
 var gHilight = 0;
 var gMemory = null;
 var gError = null;
 var gDegRad = Degree;
+var gConvUnit = USA;
 var gInvActive = false;
 var gCurrentHistoryIndex = null;
 var gCurrentHistoryIncIndex = null;
+var gPanelOrder = [1, 2, 3, 4];
 
 class CalculatorView extends WatchUi.View {
-
     function initialize() {
         View.initialize();
-    }
 
-    function onHide() {
-        if (Toybox has :Attention && Attention has :setFlashlightMode) {
-            Attention.setFlashlightMode(Attention.FLASHLIGHT_MODE_OFF, null);
+        var panelOrderStr;
+        try {
+            panelOrderStr = Properties.getValue("panelOrder");
         }
-    }
+        catch (e) {
+            Properties.setValue("panelOrder", "1,2,3,4");
+        }
 
-    function drawInside(dc, x, y, pos, text, perm_hilight) {
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
-        if (gHilight == pos || perm_hilight == true) {
-            dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_WHITE);
+        if (panelOrderStr != null) {
+            var array = to_array(panelOrderStr, ",");
+            if (array.size() == 4) {
+                for (var i = 0; i < 4; i++) {
+                    var val;
+                    try {
+                        val = array[i].toNumber();
+                    }
+                    catch (e) {
+                        gPanelOrder = [1, 2, 3, 4];
+                        break;
+                    }
+
+                    if (val > 0 && val < 5) {
+                        gPanelOrder[i] = val;
+                    }
+                    else {
+                        gPanelOrder = [1, 2, 3, 4];
+                        break;
+                    }
+                }
+            }
         }
-        else {
-            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
-        }
-        dc.drawText(x, y, Graphics.FONT_SMALL, text, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
     }
 
     // Update the view
@@ -78,46 +98,61 @@ class CalculatorView extends WatchUi.View {
         var array2;
         var array3;
         var array;
+        var font;
 
-        switch (gGrid) {
-            case 0:
+        switch (gPanelOrder[gGrid - 1]) {
+            case 1:
                 array1 = [" 7 ", " 8 ", " 9 "];
                 array2 = [" 4 ", " 5 ", " 6 "];
                 array3 = [" 1 ", " 2 ", " 3 "];
                 array = [array1, array2, array3];
-
-                drawInside(dc, width / 4 + (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 10, " 0 ", false);
-                drawInside(dc, width - width / 4 - (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 11, " . ", false);
+                font = Graphics.FONT_SMALL;
+                
+                drawInside(dc, width / 4 + (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 10, " 0 ", false, Graphics.FONT_SMALL);
+                drawInside(dc, width - width / 4 - (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 11, " . ", false, Graphics.FONT_SMALL);
                 break;
 
-            case 1:
+            case 2:
                 array1 = [" ( ", " ) ", "CA"];
                 array2 = [" + ", " - ", "DD"];
                 array3 = [" * ", " ÷ ", " % "];
                 array = [array1, array2, array3];
+                font = Graphics.FONT_SMALL;
 
-                drawInside(dc, width / 4 + (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 10, "MS", false);
-                drawInside(dc, width - width / 4 - (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 11, "MR", false);
+                drawInside(dc, width / 4 + (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 10, "MS", false, Graphics.FONT_SMALL);
+                drawInside(dc, width - width / 4 - (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 11, "MR", false, Graphics.FONT_SMALL);
                 break;
 
-            case 2:
+            case 3:
                 array1 = ["INV", (gDegRad == Degree ? "DEG" : "RAD"), "Pi"];
                 array2 = ["SIN", "COS", "TAN"];
                 array3 = ["Log", "Ln", "1/x"];
                 array = [array1, array2, array3];
+                font = Graphics.FONT_SMALL;
 
-                drawInside(dc, width / 4 + (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 10, "x^2", false);
-                drawInside(dc, width - width / 4 - (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 11, "x^y", false);
+                drawInside(dc, width / 4 + (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 10, "x^2", false, Graphics.FONT_SMALL);
+                drawInside(dc, width - width / 4 - (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 11, "x^y", false, Graphics.FONT_SMALL);
+                break;
+
+            case 4:
+                array1 = ["INV", (gConvUnit == Imperial ? "IMP" : "US"), (gInvActive ? "°F<-°C" : "°F->°C")];
+                array2 = (gInvActive ? ["GAL<-LITRE", "OZ<-ML", "CUP<-ML"] : ["GAL->LITRE", "OZ->ML", "CUP->ML"]);
+                array3 = (gInvActive ? ["MILE<-KM", "FT<-CM", "LB<-KG"] : ["MILE->KM", "FT->CM", "LB->KG"]);
+                array = [array1, array2, array3];
+                font = Graphics.FONT_XTINY;
+
+                drawInside(dc, width / 4 + (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 12), height - height / (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 10 : 8), 10, (gInvActive ? "MPH<-KMH" : "MPH->KMH"), false, Graphics.FONT_XTINY);
+                drawInside(dc, width - width / 4 - (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 12), height - height / (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 10 : 8), 11, (gInvActive ? "ACRE<-M2" : "ACRE->M2"), false, Graphics.FONT_XTINY);
                 break;
         }
 
         for (var row = 0; row < 3; row++) {
             for (var col = 0; col < 3; col++) {
-                if (gGrid == 2 && row == 0 && col == 0) {
-                    drawInside(dc, width / 3 * col + width / 6, height / 5 * (row + 1) + height / 10, row * 3 + col + 1, array[row][col], gInvActive);
+                if ((gPanelOrder[gGrid - 1] == 3 || gPanelOrder[gGrid - 1] == 4) && row == 0 && col == 0) {
+                    drawInside(dc, width / 3 * col + width / 6, height / 5 * (row + 1) + height / 10, row * 3 + col + 1, array[row][col], gInvActive, font);
                 }
                 else {
-                    drawInside(dc, width / 3 * col + width / 6, height / 5 * (row + 1) + height / 10, row * 3 + col + 1, array[row][col], false);
+                    drawInside(dc, width / 3 * col + width / 6, height / 5 * (row + 1) + height / 10, row * 3 + col + 1, array[row][col], false, font);
                 }
             }
         }
@@ -148,33 +183,15 @@ class CalculatorView extends WatchUi.View {
             }
         }
     }
-}
 
-function stripTrailinZeros(number) {
-    var dotPos;
-    var numberStr = number.toDouble().toString();
-
-    dotPos = numberStr.find(".");
-    if (dotPos == null) {
-        numberStr = number.toNumber();
-    }
-    else {
-        var numberArray = numberStr.toCharArray(); 
-        var i;
-        for (i = numberStr.length() - 1; i > dotPos; i--) {
-            if (numberArray[i] != '0') {
-                break;
-            }
+    function drawInside(dc, x, y, pos, text, perm_hilight, font) {
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
+        if (gHilight == pos || perm_hilight == true) {
+            dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_WHITE);
         }
-        if (numberArray[i] == '.') {
-            i--;
+        else {
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         }
-
-        numberStr = numberStr.substring(0, i + 1);
+        dc.drawText(x, y, font, text, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
     }
-
-    if (numberStr instanceof Lang.String && numberStr.equals("-0")) {
-        numberStr = "0";
-    }
-    return numberStr.toString();
 }
