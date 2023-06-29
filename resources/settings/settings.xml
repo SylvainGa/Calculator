@@ -8,6 +8,6 @@
     </setting>
 
     <setting propertyKey="@Properties.panelOrder" title="@Strings.setting_panelOrder">
-		<settingConfig type="alphaNumeric" readonly="true"/>
+		<settingConfig type="alphaNumeric" readonly="false"/>
     </setting>
 </settings>

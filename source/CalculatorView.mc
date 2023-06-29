@@ -46,7 +46,7 @@ class CalculatorView extends WatchUi.View {
                         break;
                     }
 
-                    if (val > 0 && val < 5) {
+                    if (val != null && val > 0 && val < 5) {
                         gPanelOrder[i] = val;
                     }
                     else {
