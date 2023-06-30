@@ -28,6 +28,9 @@ function to_array(string, splitter) {
 
 function stripTrailinZeros(number) {
     var dotPos;
+    if (number == null) {
+        number = "0";
+    }
     var numberStr = number.toDouble().toString();
 
     dotPos = numberStr.find(".");
