@@ -53,6 +53,10 @@ If you want to have the widget translated to your language, contact me through e
 
 ## Changelog
 
+V1.1.0 Added the financial panel and fixed a crash while stripping trailing zeros from the answer
+
+V1.0.1 Fixed a crash while stripping trailing zeros from the answer
+
 V1.0.0 Initial release
 
 ## Contributing

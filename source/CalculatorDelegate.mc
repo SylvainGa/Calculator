@@ -34,6 +34,15 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
     var mHistorySize;
     var mCountHistory;
 
+    // Financial var
+    var mInterest;
+    var mPayment;
+    var mPeriod;
+    var mFutureValue;
+    var mPresentValue;
+    var mRecall;
+    var mCalc;
+
     function initialize() {
         BehaviorDelegate.initialize();
 
@@ -43,6 +52,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
     
         mOps_pos = 0;
         mCountHistory = true;
+        mRecall = false;
+        mCalc = false;
 
         try {
             mHistorySize = Properties.getValue("historySize");
@@ -130,6 +141,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             gAnswer = null;
                             gError = null;
                             gInvActive = false;
+                            gText = null;
                             break;
 
                         case 4: // Add
@@ -664,6 +676,160 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             break;
                     }
                     break;
+                case 5:
+                    gText = null;
+                    switch (gHilight) {
+                        case 1: // Fut.V
+                            gFinancialMode = FutureValue;
+                            break;
+
+                        case 2: // Loan
+                            gFinancialMode = Loan;
+                            break;
+
+                        case 3: // Interest
+                            gFinancialMode = Interest;
+                            break;
+
+                        case 4: // PV
+                            if (mRecall) {
+                                gAnswer = stripTrailinZeros(mPresentValue);
+                                mRecall = false;
+                                break;
+                            }
+                            if (mCalc) {
+                                calcFinancial(gHilight);
+                                break;
+                            }
+                            // If we didn't type a number, use what's on the display for the first number
+                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
+                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            }
+                            // We currently have something in the input queue and that something is a 'number' (shown as a string), use that
+                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
+                                gAnswer = stripTrailinZeros(mOps[mOps_pos].toFloat());
+                            }
+                            mPresentValue = gAnswer.toFloat();
+                            if (mPresentValue == 0.0) {
+                                mPresentValue = null;
+                            }
+                            mOps[mOps_pos] = null;
+                            break;
+
+
+                        case 5: // FV
+                            if (mRecall) {
+                                gAnswer = stripTrailinZeros(mFutureValue);
+                                mRecall = false;
+                                break;
+                            }
+                            if (mCalc) {
+                                calcFinancial(gHilight);
+                                break;
+                            }
+                            // If we didn't type a number, use what's on the display for the first number
+                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
+                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            }
+                            // We currently have something in the input queue and that something is a 'number' (shown as a string), use that
+                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
+                                gAnswer = stripTrailinZeros(mOps[mOps_pos].toFloat());
+                            }
+                            mFutureValue = gAnswer.toFloat();
+                            if (mFutureValue == 0.0) {
+                                mFutureValue = null;
+                            }
+                            mOps[mOps_pos] = null;
+                            break;
+
+                        case 6: // PMT
+                            if (mRecall) {
+                                gAnswer = stripTrailinZeros(mPayment);
+                                mRecall = false;
+                                break;
+                            }
+                            if (mCalc) {
+                                calcFinancial(gHilight);
+                                break;
+                            }
+                            // If we didn't type a number, use what's on the display for the first number
+                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
+                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            }
+                            // We currently have something in the input queue and that something is a 'number' (shown as a string), use that
+                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
+                                gAnswer = stripTrailinZeros(mOps[mOps_pos].toFloat());
+                            }
+                            mPayment = gAnswer.toFloat();
+                            if (mPayment == 0.0) {
+                                mPayment = null;
+                            }
+                            mOps[mOps_pos] = null;
+                            break;
+
+                        case 7: // N
+                            if (mRecall) {
+                                gAnswer = stripTrailinZeros(mPeriod);
+                                mRecall = false;
+                                break;
+                            }
+                            if (mCalc) {
+                                calcFinancial(gHilight);
+                                break;
+                            }
+                            // If we didn't type a number, use what's on the display for the first number
+                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
+                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            }
+                            // We currently have something in the input queue and that something is a 'number' (shown as a string), use that
+                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
+                                gAnswer = stripTrailinZeros(mOps[mOps_pos].toFloat());
+                            }
+                            mPeriod = gAnswer.toFloat();
+                            if (mPeriod == 0.0) {
+                                mPeriod = null;
+                            }
+                            mOps[mOps_pos] = null;
+                            break;
+
+                        case 8: // INT
+                            if (mRecall) {
+                                gAnswer = stripTrailinZeros(mInterest);
+                                mRecall = false;
+                                break;
+                            }
+                            if (mCalc) {
+                                calcFinancial(gHilight);
+                                break;
+                            }
+                            // If we didn't type a number, use what's on the display for the first number
+                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
+                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            }
+                            // We currently have something in the input queue and that something is a 'number' (shown as a string), use that
+                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
+                                gAnswer = stripTrailinZeros(mOps[mOps_pos].toFloat());
+                            }
+                            mInterest = gAnswer.toFloat() / 100.0;
+                            if (mInterest == 0.0) {
+                                mInterest = null;
+                            }
+                            mOps[mOps_pos] = null;
+                            break;
+
+                        case 9:
+                            break;
+
+                        case 10:
+                            mRecall = true;
+                            break;
+
+                        case 11:
+                            gError = null;
+                            mCalc = true;
+                            break;
+                    }
+                    break;
             }
         }
         else {
@@ -717,6 +883,156 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
         return true;
     }
 
+    function calcFinancial(which) {
+        mCalc = false;
+
+        switch (gFinancialMode) {
+            case FutureValue:
+                // F=PV∗(1+Int)^n + PMT∗((1+I)^n-1)/I
+                var float;
+                var futureValue;
+
+                switch (which) {
+                    case 4: // PV
+                        if (mPeriod == null || mFutureValue == null || mInterest == null) {
+                            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                            break;
+                        }
+                        gText = "PV=";
+                        try {
+                            futureValue = mFutureValue;
+                            if (mPayment != null) {
+                                float = mPayment * (Math.pow(1.0 + mInterest, mPeriod) - 1.0) / mInterest; // Recurrent deposit
+                                futureValue -= float; 
+
+                            }
+                            float = futureValue / Math.pow((1.0 + mInterest), mPeriod); // From future value
+                        }
+                        catch (e) {
+                            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                            break;
+                        }
+
+                        if (!isFinite(float)) {
+                            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                        }
+                        else {
+                            gAnswer = stripTrailinZeros(float);
+                            mPresentValue = float;
+                        }
+                        break;
+
+                    case 5: // FV
+                        if ((mPayment == null && mPresentValue == null) || mPeriod == null || mInterest == null) {
+                            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                            break;
+                        }
+                        gText = "FV=";
+                        try {
+                            float = 0.0;
+                            if (mPresentValue != null) {
+                                float = mPresentValue * Math.pow((1.0 + mInterest), mPeriod); // From present value
+                            }
+                            if (mPayment != null) {
+                                float += mPayment * (Math.pow(1.0 + mInterest, mPeriod) - 1.0) / mInterest; // Adding it recurrent deposit
+                            }
+                        }
+                        catch (e) {
+                            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                            break;
+                        }
+
+                        if (!isFinite(float)) {
+                            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                        }
+                        else {
+                            gAnswer = stripTrailinZeros(float);
+                            mFutureValue = float;
+                        }
+                        break;
+
+                    case 6: // DEP
+                        if (mFutureValue == null || mPeriod == null || mInterest == null) {
+                            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                            break;
+                        }
+                        gText = "DEP=";
+                        try {
+                            futureValue = mFutureValue;
+                            if (mPresentValue != null) {
+                                float = mPresentValue * Math.pow((1.0 + mInterest), mPeriod); // Present value
+                                futureValue -= float;
+                            }
+                            float = futureValue / ((Math.pow(1.0 + mInterest, mPeriod) - 1.0) / mInterest); // From payment
+                        }
+                        catch (e) {
+                            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                            break;
+                        }
+
+                        if (!isFinite(float)) {
+                            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                        }
+                        else {
+                            gAnswer = stripTrailinZeros(float);
+                            mPayment = float;
+                        }
+                        break;
+
+                    case 7: // N
+                        if (mFutureValue == null || mPeriod == null || mInterest == null) {
+                            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                            break;
+                        }
+                        gText = "N=";
+                        try {
+                            float = Math.ln(mFutureValue / mPresentValue) / Math.ln(1.0 + mInterest);
+                        }
+                        catch (e) {
+                            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                            break;
+                        }
+
+                        if (!isFinite(float)) {
+                            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                        }
+                        else {
+                            gAnswer = stripTrailinZeros(float);
+                            mPeriod = float;
+                        }
+                        break;
+
+                    case 8:
+                        if (mFutureValue == null || mPeriod == null || mPresentValue == null) {
+                            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                            break;
+                        }
+                        gText = "INT=";
+                        try {
+                            float = (Math.pow(mFutureValue / mPresentValue, (1.0 / mPeriod)) - 1.0) * 100.0;
+                        }
+                        catch (e) {
+                            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                            break;
+                        }
+
+                        if (!isFinite(float)) {
+                            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                        }
+                        else {
+                            gAnswer = stripTrailinZeros(float);
+                            mInterest = float;
+                        }
+                        break;
+                }
+                break;
+            case Loan:
+                break;
+            case Interest:
+                break;
+        }
+
+    }
     function calcPrevious(oper) {
         if (mOps_pos < 2) {
             return;
@@ -832,12 +1148,16 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
     function onSwipe(swipeEvent) {
         if (swipeEvent.getDirection() == WatchUi.SWIPE_LEFT) {
+            gInvActive = false;
+            gText = null;
             gGrid++;
             if (gGrid > GRID_COUNT) {
                 gGrid = 1;
             }
         }
         else if (swipeEvent.getDirection() == WatchUi.SWIPE_RIGHT) {
+            gInvActive = false;
+            gText = null;
             gGrid--;
             if (gGrid < 1) {
                 gGrid = GRID_COUNT;
@@ -848,6 +1168,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                 return false;
             }
 
+            gText = null;
             var index;
             if (gCurrentHistoryIndex != null) { // We've been through this path already, grab where we were at
                 if (gCurrentHistoryIncIndex == null) {
@@ -897,6 +1218,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                 return false;
             }
 
+            gText = null;
             var index;
             if (gCurrentHistoryIndex != null) { // We've been through this path already, grab where we were at
                 if (gCurrentHistoryIncIndex == null) {

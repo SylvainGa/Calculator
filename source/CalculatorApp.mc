@@ -32,7 +32,8 @@ class CalculatorApp extends Application.AppBase {
     function getInitialView() as Array<Views or InputDelegates>? {
         if (Storage.getValue("fromGlance")) { // Swipe gestures only work when launched from Glance for the main view, hence why we need a subview with watches that don't support Glance or not launched from Glance
             Storage.setValue("fromGlance", false); // In case we stop launching from Glance
-            return [ new CalculatorView(), new CalculatorDelegate() ] as Array<Views or InputDelegates>;
+            var delegate = new CalculatorDelegate();
+            return [ new CalculatorView(delegate), delegate ] as Array<Views or InputDelegates>;
         }
         else { // Sucks, but we have to have an extra view so swipe gestures work in our main view
             return [ new NoGlanceView(), new NoGlanceDelegate() ];

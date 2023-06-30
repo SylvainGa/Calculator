@@ -4,26 +4,32 @@ import Toybox.Lang;
 using Toybox.Application.Storage;
 using Toybox.Application.Properties;
 
-const GRID_COUNT = 4;
+const GRID_COUNT = 5;
 
 enum { Degree, Radian }
 enum { Imperial, USA }
+enum { FutureValue = 0, Loan, Interest }
 
 var gAnswer = null;
 var gGrid = 1;
 var gHilight = 0;
 var gMemory = null;
 var gError = null;
+var gText = null;
 var gDegRad = Degree;
 var gConvUnit = USA;
 var gInvActive = false;
+var gFinancialMode = FutureValue;
 var gCurrentHistoryIndex = null;
 var gCurrentHistoryIncIndex = null;
-var gPanelOrder = [1, 2, 3, 4];
+var gPanelOrder = [1, 2, 3, 4, 5];
 
 class CalculatorView extends WatchUi.View {
-    function initialize() {
+    var mDelegate;
+
+    function initialize(delegate) {
         View.initialize();
+        mDelegate = delegate;
 
         var panelOrderStr;
         try {
@@ -35,14 +41,14 @@ class CalculatorView extends WatchUi.View {
 
         if (panelOrderStr != null) {
             var array = to_array(panelOrderStr, ",");
-            if (array.size() == 4) {
-                for (var i = 0; i < 4; i++) {
+            if (array.size() == GRID_COUNT) {
+                for (var i = 0; i < GRID_COUNT; i++) {
                     var val;
                     try {
                         val = array[i].toNumber();
                     }
                     catch (e) {
-                        gPanelOrder = [1, 2, 3, 4];
+                        gPanelOrder = [1, 2, 3, 4, 5];
                         break;
                     }
 
@@ -50,7 +56,7 @@ class CalculatorView extends WatchUi.View {
                         gPanelOrder[i] = val;
                     }
                     else {
-                        gPanelOrder = [1, 2, 3, 4];
+                        gPanelOrder = [1, 2, 3, 4, 5];
                         break;
                     }
                 }
@@ -144,11 +150,27 @@ class CalculatorView extends WatchUi.View {
                 drawInside(dc, width / 4 + (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 12), height - height / (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 10 : 8), 10, (gInvActive ? "MPH<-KMH" : "MPH->KMH"), false, Graphics.FONT_XTINY);
                 drawInside(dc, width - width / 4 - (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 12), height - height / (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 10 : 8), 11, (gInvActive ? "ACRE<-M2" : "ACRE->M2"), false, Graphics.FONT_XTINY);
                 break;
+
+            case 5:
+                array1 = ["Fut.V", "Loan", "Int."];
+                array2 = ["PV" + (mDelegate.mPresentValue != null ? "*" : ""), "FV" + (mDelegate.mFutureValue != null ? "*" : ""), (gFinancialMode == FutureValue ? "DEP" : "PMT") + (mDelegate.mPayment != null ? "*" : "")];
+                array3 = ["N" + (mDelegate.mPeriod != null ? "*" : ""), "INT" + (mDelegate.mInterest != null ? "*" : ""), ""];
+                array = [array1, array2, array3];
+                font = Graphics.FONT_SMALL;
+
+                drawInside(dc, width / 4 + (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 12), height - height / 9, 10, "Recall", (mDelegate.mRecall ? true : false), Graphics.FONT_SMALL);
+                drawInside(dc, width - width / 4 - (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 12), height - height / 9, 11, "Calc", (mDelegate.mCalc ? true : false), Graphics.FONT_SMALL);
+                break;
         }
 
+        if (gPanelOrder[gGrid - 1] == 5) {
+            gInvActive = true; // Hack so the Financial panel selected mode button is always hilighted
+        }
         for (var row = 0; row < 3; row++) {
             for (var col = 0; col < 3; col++) {
-                if ((gPanelOrder[gGrid - 1] == 3 || gPanelOrder[gGrid - 1] == 4) && row == 0 && col == 0) {
+                if (((gPanelOrder[gGrid - 1] == 3 || gPanelOrder[gGrid - 1] == 4) && row == 0 && col == 0) ||
+                     (gPanelOrder[gGrid - 1] == 5 && row == 0 && col == gFinancialMode) // the column number matches the value in gFinancialMode so the right button is hilighted
+                   ) {
                     drawInside(dc, width / 3 * col + width / 6, height / 5 * (row + 1) + height / 10, row * 3 + col + 1, array[row][col], gInvActive, font);
                 }
                 else {
@@ -173,13 +195,19 @@ class CalculatorView extends WatchUi.View {
             }
         }
 
-        if (gMemory != null || gCurrentHistoryIncIndex != null) {
+        if (gText != null) {
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            if (gCurrentHistoryIncIndex == null) {
-                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, "M=" + stripTrailinZeros(gMemory), Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
-            }
-            else {
-                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, "H=" + gCurrentHistoryIncIndex, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, gText, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+        }
+        else {
+            if (gMemory != null || gCurrentHistoryIncIndex != null) {
+                dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+                if (gCurrentHistoryIncIndex == null) {
+                    dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, "M=" + stripTrailinZeros(gMemory), Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+                }
+                else {
+                    dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, "H=" + gCurrentHistoryIncIndex, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+                }
             }
         }
     }
