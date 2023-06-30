@@ -53,6 +53,8 @@ If you want to have the widget translated to your language, contact me through e
 
 ## Changelog
 
+V1.0.2 Fixed a crash while calculating
+
 V1.0.1 Fixed a crash while removing trailing zeros from the answer
 
 V1.0.0 Initial release

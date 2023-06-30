@@ -722,12 +722,22 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
             return;
         }
 
-        var left;
-        var right;
+        var left = mOps[mOps_pos - 2];
+        var right = mOps[mOps_pos];
 
+        // Since try/catch doesn't "catch" null, we need to check for them first.
+        if (left == null || right == null) {
+            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+            return;
+        }
+
+        if (left instanceof Lang.Number && left == 1) {
+            // left is an opened parenthesis, skip the calculation until we reach that corresponding close parenthisis
+            return;
+        }
         try {
-            left = mOps[mOps_pos - 2].toFloat();
-            right = mOps[mOps_pos].toFloat();
+            left = left.toFloat();
+            right = right.toFloat();
         }
         catch (e) {
             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
