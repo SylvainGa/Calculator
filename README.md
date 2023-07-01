@@ -55,17 +55,17 @@ If you want to have the widget translated to your language, contact me through e
 
 V1.1.0 Added the following: 
 
-- Started the financial panel. USE AT YOUR OWN RISK. I make no garanty about the quality of the responses. I got the formulas from the web. I'm not a financial specialist.
-  After said, that, here how it works. Both Saving and Loan works similarely. The fields are:
+- Started the financial panel. USE AT YOUR OWN RISK. I make no guaranty about the quality of the responses. I got the formulas from the web. I'm not a financial specialist.
+  After said, that, here how it works. Both Saving and Loan works similarly. The fields are:
   Saving: 
-    - Begin/End: For recurent deposit, specify if the deposit happens at the start or the end of the period
+    - Begin/End: For recurrent deposit, specify if the deposit happens at the start or the end of the period
     - PV: Present Value
     - FV: Future Value
     - DEP: Deposit
     - YEARS: The term of the saving in years
     - I/Y: The YEARLY interest rate (enter 10 for 10%)
     - P/Y: Period per year. If monthly, enter 12. For yearly, enter 1.
-    - Recall: Press this followed by one of the buttons above to retreive the current saved or calculated value.
+    - Recall: Press this followed by one of the buttons above to retrieve the current saved or calculated value.
     - Calc: Calculate the corresponding field. Currently, the following work: PV, FV, DEP, YEARS and I/Y. For PV, FV, and DEP, you can enter PV or DEP or BOTH.
   Loan:
     - L: Loan
@@ -74,7 +74,7 @@ V1.1.0 Added the following:
     - YEARS: The term of the saving in years
     - I/Y: The YEARLY interest rate (enter 10 for 10%)
     - P/Y: Period per year. If monthly, enter 12. For yearly, enter 1.
-    - Recall: Press this followed by one of the buttons above to retreive the current saved or calculated value.
+    - Recall: Press this followed by one of the buttons above to retrieve the current saved or calculated value.
     - Calc: Calculate the corresponding field. Currently, the following work: L, TC, PMT.
 
   A field with data in it will show a '*' beside it. Entering 0 in a field clears the value.
