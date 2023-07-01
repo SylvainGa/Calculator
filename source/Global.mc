@@ -50,7 +50,7 @@ function stripTrailinZeros(number) {
         numberStr = numberStr.substring(0, index + 1); // Keep only what's necessary
     }
 
-    if (numberStr instanceof Lang.String && numberStr.equals("-0")) {
+    if (numberStr == null || (numberStr instanceof Lang.String && numberStr.equals("-0"))) {
         numberStr = "0";
     }
 

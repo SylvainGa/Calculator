@@ -53,10 +53,24 @@ If you want to have the widget translated to your language, contact me through e
 
 ## Changelog
 
+V1.2.0 Added the following:
+- Added a Statistic panel with the following option. Similar to the Financial panel, I'm not a statistician. I got the formula from the web. I do not guaranty the result are accurate, although my tests yielded the right result. Use at your own risk.
+  After said, that, here how it works. You input a number and press Add. If you want to remove a number instead, you press Del. The number has to be present to be removed. To clear the whole group of number, press Reset then Del to confirm. Numbers entered are get in non volatile memory and are reloaded once the app is started again. Once all the numbers are entered, you can use the statistical buttons, which are:
+  MEAN: The mean of the number set
+  SSDEV: Sample Standard Deviation
+  PSDEV: Population Standard Deviation
+  MEDIAN: The median of the number set
+  VARIAN: The variance of the number set
+  MODE: The mode of the number set
+  RANGE: The range of the number set
+You can view what was entered by pressing View. You scroll through the list like you do for the history by swiping up and down.
+
+- Fixed another crash while stripping trailing zeros from the answer
+
 V1.1.0 Added the following: 
 
-- Started the financial panel. USE AT YOUR OWN RISK. I make no guaranty about the quality of the responses. I got the formulas from the web. I'm not a financial specialist.
-  After said, that, here how it works. Both Saving and Loan works similarly. The fields are:
+- Added a financial panel. USE AT YOUR OWN RISK. I make no guaranty about the quality of the responses, although my tests yielded the right result. I got the formulas from the web. I'm not a financial specialist.
+  After that said, here how it works. Both Saving and Loan works similarly. The fields are:
   Saving: 
     - Begin/End: For recurrent deposit, specify if the deposit happens at the start or the end of the period
     - PV: Present Value
@@ -77,7 +91,7 @@ V1.1.0 Added the following:
     - Recall: Press this followed by one of the buttons above to retrieve the current saved or calculated value.
     - Calc: Calculate the corresponding field. Currently, the following work: L, TC, PMT.
 
-  A field with data in it will show a '*' beside it. Entering 0 in a field clears the value.
+  A field with data in it will show a '*' beside it. Entering 0 in a field clears the value. A field with a '?' beside it means that this data is missing for the calculation you tried to do.
 
   For example, to calculate the future value of $1,000 after 5 years at 6%, you would enter:
       1000 PV
@@ -86,7 +100,7 @@ V1.1.0 Added the following:
       1 P/Y
       Calc FV
 
-   If have the missing formulas, get in contact with me (github or email) and I'll see what I can do.
+   If you have the missing formulas, get in contact with me (github or email) and I'll see what I can do.
    
 - The memory value is saved and restored when the app is relaunched. Storing 0 deletes it.
 - Swiping the result window left or right changes the number of digits after the decimal points. Works when a value is displayed, not when entering a number. The number of digits is saved and restored on the next launch.

@@ -43,6 +43,16 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
     var mPeriodsPerYear;
     var mRecall;
     var mCalc;
+    var mFinancialMissingPV;
+    var mFinancialMissingFV;
+    var mFinancialMissingDEP;
+    var mFinancialMissingYears;
+    var mFinancialMissingIY;
+    var mFinancialMissingPY;
+
+    // Statistical var
+    var mDataChanged;
+    var mDataPointsSorted;
 
     // Drag coord following
     var mDragStartX;
@@ -59,6 +69,16 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
         mCountHistory = true;
         mRecall = false;
         mCalc = false;
+        mDataChanged = false;
+
+        mFinancialMissingPV = false;
+        mFinancialMissingFV = false;
+        mFinancialMissingDEP = false;
+        mFinancialMissingYears = false;
+        mFinancialMissingIY = false;
+        mFinancialMissingPY = false;
+
+        restoreDataPoints();
 
         try {
             mHistorySize = Properties.getValue("historySize");
@@ -85,9 +105,17 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
         gCurrentHistoryIndex = null;
         gCurrentHistoryIncIndex = null;
+        gError = null;
         gOpText = null;
         gDataEntry = false;
         gDigitsChanged = false;
+
+        mFinancialMissingPV = false;
+        mFinancialMissingFV = false;
+        mFinancialMissingDEP = false;
+        mFinancialMissingYears = false;
+        mFinancialMissingIY = false;
+        mFinancialMissingPY = false;
 
         mTimer.start(method(:doUpdate), 100, false);
 
@@ -882,6 +910,253 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             break;
                     }
                     break;
+                
+                case 6:
+                    gText = null;
+
+                    if (gHilight != 8) {
+                        gDataView = false;
+                    }
+                    if (gHilight != 9 && gHilight != 11) {
+                        gDataReset = false;
+                    }
+                    switch (gHilight) {
+                        case 1: // MEAN
+                            if (gDataCount > 0) {
+                                gAnswer = stripTrailinZeros(gDataMean);
+                                gText = "MEAN=";
+                            }
+                            else {
+                                gError = WatchUi.loadResource(Rez.Strings.label_noData);
+                            }
+                            mOps[mOps_pos] = null;
+                            break;
+
+                        case 2: // SSDEV
+                            if (gDataCount > 1) {
+                                var index;
+                                var ssdev = 0;
+                                for (index = 0; index < gDataCount; index++) {
+                                    var variance = (gDataPoints[index] - gDataMean);
+                                    ssdev += variance * variance;
+                                }
+                                ssdev = ssdev / (gDataCount - 1);
+                                ssdev = Math.sqrt(ssdev);
+                                gAnswer = stripTrailinZeros(ssdev);
+                                gText = "SSDEV=";
+                            }
+                            else {
+                                gError = WatchUi.loadResource(Rez.Strings.label_noData);
+                            }
+                            mOps[mOps_pos] = null;
+                            break;
+
+                        case 3: // PSDEV
+                            if (gDataCount > 0) {
+                                var index;
+                                var psdev = 0;
+                                for (index = 0; index < gDataCount; index++) {
+                                    var variance = (gDataPoints[index] - gDataMean);
+                                    psdev += variance * variance;
+                                }
+                                psdev = psdev / gDataCount;
+                                psdev = Math.sqrt(psdev);
+                                gAnswer = stripTrailinZeros(psdev);
+                                gText = "PSDEV=";
+                            }
+                            else {
+                                gError = WatchUi.loadResource(Rez.Strings.label_noData);
+                            }
+                            mOps[mOps_pos] = null;
+                            break;
+
+                        case 4: // MEDIAN
+                            if (gDataCount > 0) {
+                                if (mDataChanged) {
+                                    mDataPointsSorted = gDataPoints;
+                                    bubble_sort(mDataPointsSorted); // Data needs to be in order
+                                    mDataChanged = false;
+                                }
+                                var median;
+                                if (gDataCount % 2 == 0) { // Even number of data points
+                                    median = (mDataPointsSorted[(gDataCount / 2) - 1] + mDataPointsSorted[((gDataCount / 2) + 1) - 1]) / 2;
+                                }
+                                else { // Odd number of data points
+                                    median = mDataPointsSorted[((gDataCount + 1) / 2) - 1];
+                                }
+                                
+                                gAnswer = stripTrailinZeros(median);
+
+                                gText = "MEDIAN=";
+                            }
+                            else {
+                                gError = WatchUi.loadResource(Rez.Strings.label_noData);
+                            }
+                            mOps[mOps_pos] = null;
+                            break;
+
+                        case 5: // VARIANCE
+                            if (gDataCount > 0) {
+                                var index;
+                                var variance = 0;
+                                for (index = 0; index < gDataCount; index++) {
+                                    var diff = (gDataPoints[index] - gDataMean);
+                                    variance += diff * diff;
+                                }
+                                variance = variance / gDataCount;
+                                gAnswer = stripTrailinZeros(variance);
+                                gText = "VARIANCE=";
+                            }
+                            else {
+                                gError = WatchUi.loadResource(Rez.Strings.label_noData);
+                            }
+                            mOps[mOps_pos] = null;
+                            break;
+
+                        case 6: // MODE
+                            if (gDataCount > 0) {
+                                if (mDataChanged) {
+                                    mDataPointsSorted = gDataPoints;
+                                    bubble_sort(mDataPointsSorted); // Data needs to be in order
+                                    mDataChanged = false;
+                                }
+
+                                // Let's start by initializing our current and highest to the first array element
+                                var currentValue = mDataPointsSorted[0];
+                                var currentCount = 1;
+                                var highestValue = mDataPointsSorted[0];
+                                var highestCount = 1;
+                                for (var i = 1; i < gDataCount; i++) { // Go through the (sorted) array
+                                    if (mDataPointsSorted[i] == currentValue) {
+                                        currentCount++; // Still the same value, increase our count
+                                    }
+                                    else {
+                                        if (currentCount > highestCount) { // We have a new highest count, switch to it
+                                            highestCount = currentCount;
+                                            highestValue = currentValue;
+                                        }
+                                        currentCount = 1;
+                                        currentValue = mDataPointsSorted[i];
+                                    }
+                                }                                
+                                gAnswer = stripTrailinZeros(highestValue);
+                                gText = "MODE=";
+                            }
+                            else {
+                                gError = WatchUi.loadResource(Rez.Strings.label_noData);
+                            }
+                            mOps[mOps_pos] = null;
+                            break;
+
+                        case 7: // RANGE
+                            if (gDataCount > 0) {
+                                if (mDataChanged) {
+                                    mDataPointsSorted = gDataPoints;
+                                    bubble_sort(mDataPointsSorted); // Data needs to be in order
+                                    mDataChanged = false;
+                                }
+                                
+                                gAnswer = stripTrailinZeros(mDataPointsSorted[gDataCount - 1] - mDataPointsSorted[0]);
+                                gText = "RANGE=";
+                            }
+                            else {
+                                gError = WatchUi.loadResource(Rez.Strings.label_noData);
+                            }
+                            mOps[mOps_pos] = null;
+                            break;
+
+                        case 8: // View
+                            if (gDataCount > 0) {
+                                gDataView = !gDataView;
+                                if (gDataView) {
+                                    gAnswer = stripTrailinZeros(gDataPoints[0]);
+                                    gDataViewPos = 0;
+                                }
+                            }
+                            else {
+                                gError = WatchUi.loadResource(Rez.Strings.label_noData);
+                            }
+                            break;
+
+                        case 9: // Reset
+                            gDataReset = !gDataReset;
+                            break;
+
+                        case 10: // Add
+                            // If we didn't type a number, use what's on the display for the first number
+                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
+                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            }
+                            // We currently have something in the input queue and that something is a 'number' (shown as a string), use that
+                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
+                                gAnswer = stripTrailinZeros(mOps[mOps_pos].toFloat());
+                            }
+
+                            mDataChanged = true;
+
+                            gDataCount++;
+                            gDataSum += gAnswer.toFloat();
+                            gDataMean =  gDataSum / gDataCount;
+                            if (gDataPoints == null) {
+                                gDataPoints = [];
+                            }                        
+                            gDataPoints.add(gAnswer.toFloat());
+
+                            gText = "N=" + gDataCount;
+
+                            saveDataPoints();
+
+                            mOps[mOps_pos] = null;
+                            break;
+
+                        case 11: // Del
+                            mDataChanged = true;
+
+                            if (gDataReset) {
+                                gDataCount = 0;
+                                gDataSum = 0;
+                                gDataMean = 0;
+                                gDataPoints = null;
+                                gDataReset = false;
+
+                                gText = "N=0";
+                            }
+                            else {
+                                // If we didn't type a number, use what's on the display for the first number
+                                if (mOps_pos == 0 && mOps[mOps_pos] == null) {
+                                    mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                                }
+                                // We currently have something in the input queue and that something is a 'number' (shown as a string), use that
+                                if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
+                                    gAnswer = stripTrailinZeros(mOps[mOps_pos].toFloat());
+                                }
+
+                                if (gDataPoints != null && gDataPoints.indexOf(gAnswer.toFloat()) != -1) {
+                                    gDataPoints.remove(gAnswer.toFloat());
+                                    gDataCount--;
+                                    if (gDataCount > 0) {
+                                        gDataSum -= gAnswer.toFloat();
+                                        gDataMean = gDataSum / gDataCount;
+                                    }
+                                    else {
+                                        gDataSum = 0;
+                                        gDataMean = 0;
+                                        gDataPoints = null;
+
+                                    }
+                                    gText = "N=" + gDataCount;
+                                }
+                                else {
+                                    gError = WatchUi.loadResource((gDataPoints != null ? Rez.Strings.label_notPresent : Rez.Strings.label_noData));
+                                }
+                            }
+
+                            saveDataPoints();
+
+                            mOps[mOps_pos] = null;
+                            break;
+                    }
+                    break;
             }
         }
         else {
@@ -935,9 +1210,28 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
         return true;
     }
 
+    function saveDataPoints() {
+        Storage.setValue("DataPoints", gDataPoints);
+    }
+
+    function restoreDataPoints() {
+        gDataPoints = Storage.getValue("DataPoints");
+        if (gDataPoints != null) {
+            gDataCount = gDataPoints.size();
+            gDataMean = 0.0;
+            if (gDataCount > 0) {
+                for (var i = 0; i < gDataCount; i++) {
+                    gDataMean += gDataPoints[i];
+                }
+                gDataMean /= gDataCount;
+            }
+        }
+    }
+
     function calcFinancial(which) {
         var float;
         var futureValue;
+        var missing = false;
 
         mCalc = false;
 
@@ -946,8 +1240,24 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                 // F=PV∗(1+Int)^n + PMT∗((1+I)^n-1)/I
                 switch (which) {
                     case 4: // PV
-                        if (mFutureValue == null || mYears == null || mInterestPerYear == null || mPeriodsPerYear == null || mPeriodsPerYear == 0.0) {
-                            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                        if (mFutureValue == null) {
+                            mFinancialMissingFV = true;
+                            missing = true;
+                        }
+                        if (mYears == null) {
+                            mFinancialMissingYears = true;
+                            missing = true;
+                        }
+                        if (mInterestPerYear == null) {
+                            mFinancialMissingIY = true;
+                            missing = true;
+                        }
+                        if (mPeriodsPerYear == null || mPeriodsPerYear == 0.0) {
+                            mFinancialMissingPY = true;
+                            missing = true;
+                        }
+                        if (missing) {
+                            gError = WatchUi.loadResource(Rez.Strings.label_missingData);
                             break;
                         }
                         gText = "PV=";
@@ -975,8 +1285,25 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         break;
 
                     case 5: // FV
-                        if ((mPayment == null && mPresentValue == null) || mYears == null || mInterestPerYear == null || mPeriodsPerYear == null || mPeriodsPerYear == 0.0) {
-                            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                        if (mPayment == null && mPresentValue == null) {
+                            mFinancialMissingPV = true;
+                            mFinancialMissingDEP = true;
+                            missing = true;
+                        }
+                        if (mYears == null) {
+                            mFinancialMissingYears = true;
+                            missing = true;
+                        }
+                        if (mInterestPerYear == null) {
+                            mFinancialMissingIY = true;
+                            missing = true;
+                        }
+                        if (mPeriodsPerYear == null || mPeriodsPerYear == 0.0) {
+                            mFinancialMissingPY = true;
+                            missing = true;
+                        }
+                        if (missing) {
+                            gError = WatchUi.loadResource(Rez.Strings.label_missingData);
                             break;
                         }
                         gText = "FV=";
@@ -1004,8 +1331,24 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         break;
 
                     case 6: // DEP
-                        if (mFutureValue == null || mYears == null || mInterestPerYear == null || mPeriodsPerYear == null || mPeriodsPerYear == 0.0) {
-                            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                        if (mFutureValue == null) {
+                            mFinancialMissingFV = true;
+                            missing = true;
+                        }
+                        if (mYears == null) {
+                            mFinancialMissingYears = true;
+                            missing = true;
+                        }
+                        if (mInterestPerYear == null) {
+                            mFinancialMissingIY = true;
+                            missing = true;
+                        }
+                        if (mPeriodsPerYear == null || mPeriodsPerYear == 0.0) {
+                            mFinancialMissingPY = true;
+                            missing = true;
+                        }
+                        if (missing) {
+                            gError = WatchUi.loadResource(Rez.Strings.label_missingData);
                             break;
                         }
                         gText = "DEP=";
@@ -1031,8 +1374,24 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         break;
 
                     case 7: // YEARS
-                        if (mPresentValue == null || mFutureValue == null || mInterestPerYear == null || mPeriodsPerYear == null || mPeriodsPerYear == 0.0) {
-                            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                        if (mFutureValue == null) {
+                            mFinancialMissingFV = true;
+                            missing = true;
+                        }
+                        if (mPresentValue == null) {
+                            mFinancialMissingPV = true;
+                            missing = true;
+                        }
+                        if (mInterestPerYear == null) {
+                            mFinancialMissingIY = true;
+                            missing = true;
+                        }
+                        if (mPeriodsPerYear == null || mPeriodsPerYear == 0.0) {
+                            mFinancialMissingPY = true;
+                            missing = true;
+                        }
+                        if (missing) {
+                            gError = WatchUi.loadResource(Rez.Strings.label_missingData);
                             break;
                         }
                         gText = "YEARS=";
@@ -1054,8 +1413,24 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         break;
 
                     case 8: // I/Y
-                        if (mPresentValue == null || mFutureValue == null || mYears == null || mPeriodsPerYear == null || mPeriodsPerYear == 0.0) {
-                            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                        if (mFutureValue == null) {
+                            mFinancialMissingFV = true;
+                            missing = true;
+                        }
+                        if (mPresentValue == null) {
+                            mFinancialMissingPV = true;
+                            missing = true;
+                        }
+                        if (mYears == null) {
+                            mFinancialMissingYears = true;
+                            missing = true;
+                        }
+                        if (mPeriodsPerYear == null || mPeriodsPerYear == 0.0) {
+                            mFinancialMissingPY = true;
+                            missing = true;
+                        }
+                        if (missing) {
+                            gError = WatchUi.loadResource(Rez.Strings.label_missingData);
                             break;
                         }
                         gText = "I/Y=";
@@ -1077,15 +1452,31 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         break;
 
                     case 9: // P/Y
-                        gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                        gError = WatchUi.loadResource(Rez.Strings.label_unavailable);
                         break;
                 }
                 break;
             case Loan:
                 switch (which) {
                     case 4: // L
-                        if (mPayment == null || mYears == null || mInterestPerYear == null || mPeriodsPerYear == null || mPeriodsPerYear == 0.0) {
-                            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                        if (mPayment == null) {
+                            mFinancialMissingDEP = true;
+                            missing = true;
+                        }
+                        if (mYears == null) {
+                            mFinancialMissingYears = true;
+                            missing = true;
+                        }
+                        if (mInterestPerYear == null) {
+                            mFinancialMissingIY = true;
+                            missing = true;
+                        }
+                        if (mPeriodsPerYear == null || mPeriodsPerYear == 0.0) {
+                            mFinancialMissingPY = true;
+                            missing = true;
+                        }
+                        if (missing) {
+                            gError = WatchUi.loadResource(Rez.Strings.label_missingData);
                             break;
                         }
                         gText = "LOAN=";
@@ -1106,8 +1497,20 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         break;
 
                     case 5: // TC
-                        if (mPayment == null || mYears == null || mPeriodsPerYear == null || mPeriodsPerYear == 0.0) {
-                            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                        if (mPayment == null) {
+                            mFinancialMissingDEP = true;
+                            missing = true;
+                        }
+                        if (mYears == null) {
+                            mFinancialMissingYears = true;
+                            missing = true;
+                        }
+                        if (mPeriodsPerYear == null || mPeriodsPerYear == 0.0) {
+                            mFinancialMissingPY = true;
+                            missing = true;
+                        }
+                        if (missing) {
+                            gError = WatchUi.loadResource(Rez.Strings.label_missingData);
                             break;
                         }
                         gText = "TC=";
@@ -1128,8 +1531,24 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         break;
 
                     case 6: // PMT
-                        if (mPresentValue == null || mYears == null || mInterestPerYear == null || mPeriodsPerYear == null || mPeriodsPerYear == 0.0) {
-                            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                        if (mPresentValue == null) {
+                            mFinancialMissingPV = true;
+                            missing = true;
+                        }
+                        if (mYears == null) {
+                            mFinancialMissingYears = true;
+                            missing = true;
+                        }
+                        if (mInterestPerYear == null) {
+                            mFinancialMissingIY = true;
+                            missing = true;
+                        }
+                        if (mPeriodsPerYear == null || mPeriodsPerYear == 0.0) {
+                            mFinancialMissingPY = true;
+                            missing = true;
+                        }
+                        if (missing) {
+                            gError = WatchUi.loadResource(Rez.Strings.label_missingData);
                             break;
                         }
                         gText = "PMT=";
@@ -1147,6 +1566,18 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             gAnswer = stripTrailinZeros(float);
                             mPayment = (float == 0.0 ? null : float);
                         }
+                        break;
+
+                    case 7: // YEARS
+                        gError = WatchUi.loadResource(Rez.Strings.label_unavailable);
+                        break;
+
+                    case 8: // I/Y
+                        gError = WatchUi.loadResource(Rez.Strings.label_unavailable);
+                        break;
+
+                    case 9: // P/Y
+                        gError = WatchUi.loadResource(Rez.Strings.label_unavailable);
                         break;
                 }
 
@@ -1328,6 +1759,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                     if (mDragStartX > coord[0]) { // Like WatchUi.SWIPE_LEFT
                         gInvActive = false;
                         gText = null;
+                        gDataView = false;
                         gGrid++;
                         if (gGrid > GRID_COUNT) {
                             gGrid = 1;
@@ -1336,6 +1768,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                     else { // Like  WatchUi.SWIPE_RIGHT
                         gInvActive = false;
                         gText = null;
+                        gDataView = false;
                         gGrid--;
                         if (gGrid < 1) {
                             gGrid = GRID_COUNT;
@@ -1344,109 +1777,127 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                 }
                 else { // We 'swiped' up or down predominantly
                     if (mDragStartY > coord[1]) { // Like WatchUi.SWIPE_UP
-                        if (mHistorySize == 0) {
-                            return false;
-                        }
-
-                        gText = null;
-                        var index;
-                        if (gCurrentHistoryIndex != null) { // We've been through this path already, grab where we were at
-                            if (gCurrentHistoryIncIndex == null) {
-                                gCurrentHistoryIncIndex = 1;
+                        if (gDataView) {
+                            gDataViewPos--;
+                            if (gDataViewPos < 0) {
+                                gDataViewPos = gDataCount - 1;
                             }
-                            index = gCurrentHistoryIndex;
+                            gAnswer = stripTrailinZeros(gDataPoints[gDataViewPos]);
                         }
                         else {
-                            gCurrentHistoryIncIndex = 1; // First time around. Start from where we'll store our next answer
-                            index = Storage.getValue("HistoryIndex");
-                        }
-                        if (index == null) {
-                            index = 1; // We will decrement it to 0 in the do/while loop below
-                        }
-
-                        var start = index;
-                        var answer;
-                        do {
-                            index--;
-                            if (index < 0) { // Wrap around if we've hit the top of our list
-                                index = mHistorySize - 1;
+                            if (mHistorySize == 0) {
+                                return false;
                             }
-                            answer = Storage.getValue("history_" + index);
-                        } while (answer == null && index != start);
 
-                        if (answer != null) {
-                            gCurrentHistoryIndex = index; // This is the one we're at now. Keep for the next swipe up/down
-                            gCurrentHistoryIncIndex--; // We got a new one so decrease our index on screen
-                            if (gCurrentHistoryIncIndex < 0) {
-                                // Need to find the quantity of non null in our history list
+                            gText = null;
+                            var index;
+                            if (gCurrentHistoryIndex != null) { // We've been through this path already, grab where we were at
+                                if (gCurrentHistoryIncIndex == null) {
+                                    gCurrentHistoryIncIndex = 1;
+                                }
+                                index = gCurrentHistoryIndex;
+                            }
+                            else {
+                                gCurrentHistoryIncIndex = 1; // First time around. Start from where we'll store our next answer
+                                index = Storage.getValue("HistoryIndex");
+                            }
+                            if (index == null) {
+                                index = 1; // We will decrement it to 0 in the do/while loop below
+                            }
+
+                            var start = index;
+                            var answer;
+                            do {
+                                index--;
+                                if (index < 0) { // Wrap around if we've hit the top of our list
+                                    index = mHistorySize - 1;
+                                }
+                                answer = Storage.getValue("history_" + index);
+                            } while (answer == null && index != start);
+
+                            if (answer != null) {
+                                gCurrentHistoryIndex = index; // This is the one we're at now. Keep for the next swipe up/down
+                                gCurrentHistoryIncIndex--; // We got a new one so decrease our index on screen
+                                if (gCurrentHistoryIncIndex < 0) {
+                                    // Need to find the quantity of non null in our history list
+                                    var count = 0;
+                                    for (var i = 0; i < mHistorySize; i++) {
+                                        if (Storage.getValue("history_" + i) != null) {
+                                            count++;
+                                        }
+                                    }
+                                    gCurrentHistoryIncIndex = count - 1;
+                                }
+                                gAnswer = answer;
+                            }
+                            else {
+                                gCurrentHistoryIncIndex = null;
+                            }
+                        }
+                    }
+                    else { // Like WatchUi.SWIPE_UP
+                        if (gDataView) {
+                            gDataViewPos++;
+                            if (gDataViewPos >= gDataCount) {
+                                gDataViewPos = 0;
+                            }
+                            gAnswer = stripTrailinZeros(gDataPoints[gDataViewPos]);
+                        }
+                        else {
+                            if (mHistorySize == 0) {
+                                return false;
+                            }
+
+                            gText = null;
+                            var index;
+                            if (gCurrentHistoryIndex != null) { // We've been through this path already, grab where we were at
+                                if (gCurrentHistoryIncIndex == null) {
+                                    gCurrentHistoryIncIndex = 0;
+                                }
+                                index = gCurrentHistoryIndex;
+                            }
+                            else {
+                                gCurrentHistoryIncIndex = 0; // First time around. Start from where we'll store our next answer
+                                index = Storage.getValue("HistoryIndex");
+                            }
+                            if (index == null || index >= mHistorySize) {
+                                index = -1; // We'll increase it to 0 in the do/while loop below
+                            }
+
+                            // Find the next non null entry in our history
+                            var start = index;
+                            var answer;
+                            do {
+                                index++; // Get the next one since we point to the current one
+                                if (index >= mHistorySize) {
+                                    if (start == -1) {
+                                        start = index;
+                                        break;
+                                    }
+                                    index = 0;
+                                }
+
+                                answer = Storage.getValue("history_" + index);
+
+                            } while (answer == null && index != start);
+
+                            if (answer != null) {
+                                gCurrentHistoryIndex = index; // This is the one we're at now. Keep for the next swipe up/down
+                                gCurrentHistoryIncIndex++; // We got a new one so increase our index on screen
                                 var count = 0;
                                 for (var i = 0; i < mHistorySize; i++) {
                                     if (Storage.getValue("history_" + i) != null) {
                                         count++;
                                     }
                                 }
-                                gCurrentHistoryIncIndex = count - 1;
-                            }
-                            gAnswer = answer;
-                        }
-                        else {
-                            gCurrentHistoryIncIndex = null;
-                        }
-                    }
-                    else { // Like WatchUi.SWIPE_UP
-                        if (mHistorySize == 0) {
-                            return false;
-                        }
-
-                        gText = null;
-                        var index;
-                        if (gCurrentHistoryIndex != null) { // We've been through this path already, grab where we were at
-                            if (gCurrentHistoryIncIndex == null) {
-                                gCurrentHistoryIncIndex = 0;
-                            }
-                            index = gCurrentHistoryIndex;
-                        }
-                        else {
-                            gCurrentHistoryIncIndex = 0; // First time around. Start from where we'll store our next answer
-                            index = Storage.getValue("HistoryIndex");
-                        }
-                        if (index == null || index >= mHistorySize) {
-                            index = -1; // We'll increase it to 0 in the do/while loop below
-                        }
-
-                        // Find the next non null entry in our history
-                        var start = index;
-                        var answer;
-                        do {
-                            index++; // Get the next one since we point to the current one
-                            if (index >= mHistorySize) {
-                                if (start == -1) {
-                                    start = index;
-                                    break;
+                                if (gCurrentHistoryIncIndex > count - 1) {
+                                    gCurrentHistoryIncIndex = 0;
                                 }
-                                index = 0;
+                                gAnswer = answer;
                             }
-
-                            answer = Storage.getValue("history_" + index);
-
-                        } while (answer == null && index != start);
-
-                        if (answer != null) {
-                            gCurrentHistoryIndex = index; // This is the one we're at now. Keep for the next swipe up/down
-                            gCurrentHistoryIncIndex++; // We got a new one so increase our index on screen
-                            var count = 0;
-                            for (var i = 0; i < mHistorySize; i++) {
-                                if (Storage.getValue("history_" + i) != null) {
-                                    count++;
-                                }
+                            else {
+                                gCurrentHistoryIncIndex = null;
                             }
-                            if (gCurrentHistoryIncIndex > count - 1) {
-                                gCurrentHistoryIncIndex = 0;
-                            }
-                            gAnswer = answer;
-                        }
-                        else {
-                            gCurrentHistoryIncIndex = null;
                         }
                     }
                 }
@@ -1489,5 +1940,23 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
     function isFinite(x) {
         return !x.equals(NaN) && !x.equals(Math.acos(45));
+    }
+
+    function bubble_sort(array) {
+        var n = array.size();
+
+        do {
+            var newn = 0;
+            for (var i = 1; i < n; ++i) {
+                if (array[i] < array[i - 1]) {
+                    var tmp = array[i - 1];
+                    array[i - 1] = array[i];
+                    array[i] = tmp;
+
+                    newn = i;
+                }
+            }
+            n = newn;
+        } while (n != 0);
     }
 }

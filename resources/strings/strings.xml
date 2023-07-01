@@ -1,6 +1,6 @@
 <strings>
     <string id="AppName">Calculator</string>
-    <string id="AppNameVersion">Calculator V1.1.0</string>
+    <string id="AppNameVersion">Calculator V1.2.0</string>
     <string id="shortComplicationLabel">Calc</string>
     <string id="longComplicationLabel">Calculator</string>
 
@@ -12,6 +12,10 @@
 
 	<string id="label_divide0">Divide by zero</string>
 	<string id="label_invalid">Invalid</string>
+	<string id="label_unavailable">Unavailable</string>
+	<string id="label_missingData">Missing Data</string>
+	<string id="label_noData">No Data</string>
+	<string id="label_notPresent">Not found</string>
 	
 	<string id="setting_historySize">Size of history buffer</string>
 	<string id="setting_panelOrder">Panel order</string>

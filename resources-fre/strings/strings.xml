@@ -11,6 +11,10 @@
 
 	<string id="label_divide0">Division par zéro</string>
 	<string id="label_invalid">Invalide</string>
+	<string id="label_unavailable">Non disponible</string>
+	<string id="label_missingData">Donnée Manquante</string>
+	<string id="label_noData">Aucune donnée</string>
+	<string id="label_notPresent">Non trouvé</string>
 
 	<string id="setting_historySize">Dimension de l'historique des résultats</string>
 	<string id="setting_panelOrder">Ordre des panneaux</string>

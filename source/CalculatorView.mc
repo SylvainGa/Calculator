@@ -4,7 +4,7 @@ import Toybox.Lang;
 using Toybox.Application.Storage;
 using Toybox.Application.Properties;
 
-const GRID_COUNT = 5;
+const GRID_COUNT = 6;
 
 enum { Degree, Radian }
 enum { Imperial, USA }
@@ -21,14 +21,25 @@ var gMemory = null;
 var gError = null;
 var gText = null;
 var gOpText = null;
-var gDegRad = Degree;
-var gConvUnit = USA;
 var gInvActive = false;
-var gFinancialMode = FutureValue;
-var gFinancialBeginEnd = Begin;
 var gCurrentHistoryIndex = null;
 var gCurrentHistoryIncIndex = null;
-var gPanelOrder = [1, 2, 3, 4, 5];
+var gPanelOrder = [1, 2, 3, 4, 5, 6];
+
+var gDegRad = Degree;
+
+var gConvUnit = USA;
+
+var gFinancialMode = FutureValue;
+var gFinancialBeginEnd = Begin;
+
+var gDataCount = 0;
+var gDataSum = 0;
+var gDataMean = 0;
+var gDataPoints = null;
+var gDataReset = false;
+var gDataView = false;
+var gDataViewPos = 0;
 
 class CalculatorView extends WatchUi.View {
     var mDelegate;
@@ -50,7 +61,7 @@ class CalculatorView extends WatchUi.View {
             panelOrderStr = Properties.getValue("panelOrder");
         }
         catch (e) {
-            Properties.setValue("panelOrder", "1,2,3,4");
+            Properties.setValue("panelOrder", "1,2,3,4, 5, 6");
         }
 
         if (panelOrderStr != null) {
@@ -62,15 +73,15 @@ class CalculatorView extends WatchUi.View {
                         val = array[i].toNumber();
                     }
                     catch (e) {
-                        gPanelOrder = [1, 2, 3, 4, 5];
+                        gPanelOrder = [1, 2, 3, 4, 5, 6];
                         break;
                     }
 
-                    if (val != null && val > 0 && val < 5) {
+                    if (val != null && val > 0 && val < GRID_COUNT) {
                         gPanelOrder[i] = val;
                     }
                     else {
-                        gPanelOrder = [1, 2, 3, 4, 5];
+                        gPanelOrder = [1, 2, 3, 4, 5, 6];
                         break;
                     }
                 }
@@ -128,6 +139,11 @@ class CalculatorView extends WatchUi.View {
                 array = [array1, array2, array3];
                 font = Graphics.FONT_SMALL;
                 
+                for (var row = 0; row < 3; row++) {
+                    for (var col = 0; col < 3; col++) {
+                        drawInside(dc, width / 3 * col + width / 6, height / 5 * (row + 1) + height / 10, row * 3 + col + 1, array[row][col], false, font);
+                    }
+                }
                 drawInside(dc, width / 4 + (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 10, " 0 ", false, Graphics.FONT_SMALL);
                 drawInside(dc, width - width / 4 - (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 11, " . ", false, Graphics.FONT_SMALL);
                 break;
@@ -139,6 +155,11 @@ class CalculatorView extends WatchUi.View {
                 array = [array1, array2, array3];
                 font = Graphics.FONT_SMALL;
 
+                for (var row = 0; row < 3; row++) {
+                    for (var col = 0; col < 3; col++) {
+                        drawInside(dc, width / 3 * col + width / 6, height / 5 * (row + 1) + height / 10, row * 3 + col + 1, array[row][col], false, font);
+                    }
+                }
                 drawInside(dc, width / 4 + (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 10, "MS", false, Graphics.FONT_SMALL);
                 drawInside(dc, width - width / 4 - (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 11, "MR", false, Graphics.FONT_SMALL);
                 break;
@@ -150,6 +171,16 @@ class CalculatorView extends WatchUi.View {
                 array = [array1, array2, array3];
                 font = Graphics.FONT_SMALL;
 
+                for (var row = 0; row < 3; row++) {
+                    for (var col = 0; col < 3; col++) {
+                        if (row == 0 && col == 0) {
+                            drawInside(dc, width / 3 * col + width / 6, height / 5 * (row + 1) + height / 10, row * 3 + col + 1, array[row][col], gInvActive, font);
+                        }
+                        else {
+                            drawInside(dc, width / 3 * col + width / 6, height / 5 * (row + 1) + height / 10, row * 3 + col + 1, array[row][col], false, font);
+                        }
+                    }
+                }
                 drawInside(dc, width / 4 + (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 10, "x^2", false, Graphics.FONT_SMALL);
                 drawInside(dc, width - width / 4 - (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 11, "x^y", false, Graphics.FONT_SMALL);
                 break;
@@ -161,6 +192,16 @@ class CalculatorView extends WatchUi.View {
                 array = [array1, array2, array3];
                 font = Graphics.FONT_XTINY;
 
+                for (var row = 0; row < 3; row++) {
+                    for (var col = 0; col < 3; col++) {
+                        if (row == 0 && col == 0) {
+                            drawInside(dc, width / 3 * col + width / 6, height / 5 * (row + 1) + height / 10, row * 3 + col + 1, array[row][col], gInvActive, font);
+                        }
+                        else {
+                            drawInside(dc, width / 3 * col + width / 6, height / 5 * (row + 1) + height / 10, row * 3 + col + 1, array[row][col], false, font);
+                        }
+                    }
+                }
                 drawInside(dc, width / 4 + (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 12), height - height / (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 10 : 8), 10, (gInvActive ? "MPH<-KMH" : "MPH->KMH"), false, Graphics.FONT_XTINY);
                 drawInside(dc, width - width / 4 - (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 12), height - height / (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 10 : 8), 11, (gInvActive ? "ACRE<-M2" : "ACRE->M2"), false, Graphics.FONT_XTINY);
                 break;
@@ -168,33 +209,49 @@ class CalculatorView extends WatchUi.View {
             case 5:
                 if (gFinancialMode == FutureValue) {
                     array1 = ["Saving", (gFinancialBeginEnd == Begin ? "Begin" : "End"), ""];
-                    array2 = ["PV" + (mDelegate.mPresentValue != null ? "*" : ""), "FV" + (mDelegate.mFutureValue != null ? "*" : ""), "DEP" + (mDelegate.mPayment != null ? "*" : "")];
+                    array2 = ["PV" + (mDelegate.mPresentValue != null ? "*" : (mDelegate.mFinancialMissingPV ? "?" : "")), "FV" + (mDelegate.mFutureValue != null ? "*" : (mDelegate.mFinancialMissingFV ? "?" : "")), "DEP" + (mDelegate.mPayment != null ? "*" : (mDelegate.mFinancialMissingDEP ? "?" : ""))];
                 }
                 else {
                     array1 = ["Loan", "", ""];
-                    array2 = ["L" + (mDelegate.mPresentValue != null ? "*" : ""), "TC" + (mDelegate.mFutureValue != null ? "*" : ""), "PMT" + (mDelegate.mPayment != null ? "*" : "")];
+                    array2 = ["L" + (mDelegate.mPresentValue != null ? "*" : (mDelegate.mFinancialMissingPV ? "?" : "")), "TC" + (mDelegate.mFutureValue != null ? "*" : (mDelegate.mFinancialMissingFV ? "?" : "")), "PMT" + (mDelegate.mPayment != null ? "*" : (mDelegate.mFinancialMissingDEP ? "?" : ""))];
                 }
-                array3 = ["YEARS" + (mDelegate.mYears != null ? "*" : ""), "I/Y" + (mDelegate.mInterestPerYear != null ? "*" : ""), "P/Y" + (mDelegate.mPeriodsPerYear != null ? "*" : "")];
+                array3 = ["YEARS" + (mDelegate.mYears != null ? "*" : (mDelegate.mFinancialMissingYears ? "?" : "")), "I/Y" + (mDelegate.mInterestPerYear != null ? "*" : (mDelegate.mFinancialMissingIY ? "?" : "")), "P/Y" + (mDelegate.mPeriodsPerYear != null ? "*" : (mDelegate.mFinancialMissingPY ? "?" : ""))];
                 array = [array1, array2, array3];
                 font = Graphics.FONT_SMALL;
 
+                for (var row = 0; row < 3; row++) {
+                    for (var col = 0; col < 3; col++) {
+                        drawInside(dc, width / 3 * col + width / 6, height / 5 * (row + 1) + height / 10, row * 3 + col + 1, array[row][col], false, font);
+                    }
+                }
                 drawInside(dc, width / 4 + (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 12), height - height / 9, 10, "Recall", (mDelegate.mRecall ? true : false), Graphics.FONT_SMALL);
                 drawInside(dc, width - width / 4 - (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 12), height - height / 9, 11, "Calc", (mDelegate.mCalc ? true : false), Graphics.FONT_SMALL);
                 break;
-        }
 
-        if (gPanelOrder[gGrid - 1] == 5) {
-            gInvActive = true; // Hack so the Financial panel selected mode button is always hilighted
-        }
-        for (var row = 0; row < 3; row++) {
-            for (var col = 0; col < 3; col++) {
-                if (((gPanelOrder[gGrid - 1] == 3 || gPanelOrder[gGrid - 1] == 4) && row == 0 && col == 0)) {
-                    drawInside(dc, width / 3 * col + width / 6, height / 5 * (row + 1) + height / 10, row * 3 + col + 1, array[row][col], gInvActive, font);
+            case 6:
+                array1 = ["MEAN", "SSDEV", "PSDEV"];
+                array2 = ["MEDIAN", "VARIAN", "MODE"];
+                array3 = ["RANGE", "View", "Reset"];
+                array = [array1, array2, array3];
+                font = Graphics.FONT_SMALL;
+
+                for (var row = 0; row < 3; row++) {
+                    for (var col = 0; col < 3; col++) {
+                        if (row == 2 && col == 2) {
+                            drawInside(dc, width / 3 * col + width / 6, height / 5 * (row + 1) + height / 10, row * 3 + col + 1, array[row][col], gDataReset, font);
+                        }
+                        else if (row == 2 && col == 1) {
+                            drawInside(dc, width / 3 * col + width / 6, height / 5 * (row + 1) + height / 10, row * 3 + col + 1, array[row][col], gDataView, font);
+                        }
+                        else {
+                            drawInside(dc, width / 3 * col + width / 6, height / 5 * (row + 1) + height / 10, row * 3 + col + 1, array[row][col], false, font);
+                        }
+                    }
+
                 }
-                else {
-                    drawInside(dc, width / 3 * col + width / 6, height / 5 * (row + 1) + height / 10, row * 3 + col + 1, array[row][col], false, font);
-                }
-            }
+                drawInside(dc, width / 4 + (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 10, "Add", false, Graphics.FONT_SMALL);
+                drawInside(dc, width - width / 4 - (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 11, "Del" + (gDataReset ? "?" : ""), false, Graphics.FONT_SMALL);
+                break;
         }
 
         dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_DK_GRAY);
@@ -221,9 +278,12 @@ class CalculatorView extends WatchUi.View {
             dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? width : width - (width / 3 - width / 6)), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, gText, Graphics.TEXT_JUSTIFY_RIGHT | Graphics.TEXT_JUSTIFY_VCENTER);
         }
         else {
-            if (gMemory != null || gCurrentHistoryIncIndex != null) {
+            if (gMemory != null || gCurrentHistoryIncIndex != null || gDataView) {
                 dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-                if (gCurrentHistoryIncIndex == null) {
+                if (gDataView) {
+                    dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, "D=" + (gDataViewPos + 1), Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+                }
+                else if (gCurrentHistoryIncIndex == null) {
                     dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, "M=" + stripTrailinZeros(gMemory), Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
                 }
                 else {
