@@ -53,7 +53,41 @@ If you want to have the widget translated to your language, contact me through e
 
 ## Changelog
 
-V1.1.0 Added the financial panel and fixed a crash while stripping trailing zeros from the answer
+V1.1.0 Added the following: 
+
+- Started the financial panel. USE AT YOUR OWN RISK. I make no garanty about the quality of the responses. I got the formulas from the web. I'm not a financial specialist.
+  After said, that, here how it works. Both Saving and Loan works similarely. The fields are:
+  Saving: 
+    - Begin/End: For recurent deposit, specify if the deposit happens at the start or the end of the period
+    - PV: Present Value
+    - FV: Future Value
+    - DEP: Deposit
+    - YEARS: The term of the saving in years
+    - I/Y: The YEARLY interest rate (enter 10 for 10%)
+    - P/Y: Period per year. If monthly, enter 12. For yearly, enter 1.
+    - Recall: Press this followed by one of the buttons above to retreive the current saved or4 calculated value.
+    - Calc: Calculate the corresponding field. Currently, the following work: PV, FV, DEP, YEARS and I/Y. For PV, FV, and DEP, you can enter PV or DEP or BOTH.
+  Loan:
+    - L: Loan
+    - TC: Total Cost
+    - PMT: Payment
+    - YEARS: The term of the saving in years
+    - I/Y: The YEARLY interest rate (enter 10 for 10%)
+    - P/Y: Period per year. If monthly, enter 12. For yearly, enter 1.
+    - Recall: Press this followed by one of the buttons above to retreive the current saved or4 calculated value.
+    - Calc: Calculate the corresponding field. Currently, the following work: L, TC, PMT.
+
+  A field with data in it will show a '*' beside it. Entering 0 in a field clears the value.
+
+  For example, to calculate the future value of $1,000 after 5 years at 6%, you would enter:
+      1000 PV
+      5 YEARS
+      6 I/Y
+      1 P/Y
+      Calc FV
+
+- The memory value is saved and restored when the app is relaunched. Storing 0 deletes it.
+- Swiping the result window left and right changes the number of digits after the decimal points. Works when a value is displayed, not when entering a number
 
 V1.0.1 Fixed a crash while stripping trailing zeros from the answer
 

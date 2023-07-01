@@ -8,18 +8,23 @@ const GRID_COUNT = 5;
 
 enum { Degree, Radian }
 enum { Imperial, USA }
-enum { FutureValue = 0, Loan, Interest }
+enum { FutureValue = 0, Loan }
+enum { Begin, End }
 
 var gAnswer = null;
+var gDigits = 2;
+var gDataEntry = false; // When true, we are actively inputing digits
 var gGrid = 1;
 var gHilight = 0;
 var gMemory = null;
 var gError = null;
 var gText = null;
+var gOpText = null;
 var gDegRad = Degree;
 var gConvUnit = USA;
 var gInvActive = false;
 var gFinancialMode = FutureValue;
+var gFinancialBeginEnd = Begin;
 var gCurrentHistoryIndex = null;
 var gCurrentHistoryIncIndex = null;
 var gPanelOrder = [1, 2, 3, 4, 5];
@@ -30,6 +35,14 @@ class CalculatorView extends WatchUi.View {
     function initialize(delegate) {
         View.initialize();
         mDelegate = delegate;
+
+        gDigits = Storage.getValue("digits");
+        if (gDigits == null || gDigits < 0 || gDigits > 10) {
+            gDigits = 6;
+            Storage.setValue("digits", gDigits);
+        }
+
+        gMemory = Storage.getValue("Memory");
 
         var panelOrderStr;
         try {
@@ -152,9 +165,15 @@ class CalculatorView extends WatchUi.View {
                 break;
 
             case 5:
-                array1 = ["Fut.V", "Loan", "Int."];
-                array2 = ["PV" + (mDelegate.mPresentValue != null ? "*" : ""), "FV" + (mDelegate.mFutureValue != null ? "*" : ""), (gFinancialMode == FutureValue ? "DEP" : "PMT") + (mDelegate.mPayment != null ? "*" : "")];
-                array3 = ["N" + (mDelegate.mPeriod != null ? "*" : ""), "INT" + (mDelegate.mInterest != null ? "*" : ""), ""];
+                if (gFinancialMode == FutureValue) {
+                    array1 = ["Saving", (gFinancialBeginEnd == Begin ? "Begin" : "End"), ""];
+                    array2 = ["PV" + (mDelegate.mPresentValue != null ? "*" : ""), "FV" + (mDelegate.mFutureValue != null ? "*" : ""), "DEP" + (mDelegate.mPayment != null ? "*" : "")];
+                }
+                else {
+                    array1 = ["Loan", "", ""];
+                    array2 = ["L" + (mDelegate.mPresentValue != null ? "*" : ""), "TC" + (mDelegate.mFutureValue != null ? "*" : ""), "PMT" + (mDelegate.mPayment != null ? "*" : "")];
+                }
+                array3 = ["YEARS" + (mDelegate.mYears != null ? "*" : ""), "I/Y" + (mDelegate.mInterestPerYear != null ? "*" : ""), "P/Y" + (mDelegate.mPeriodsPerYear != null ? "*" : "")];
                 array = [array1, array2, array3];
                 font = Graphics.FONT_SMALL;
 
@@ -168,9 +187,7 @@ class CalculatorView extends WatchUi.View {
         }
         for (var row = 0; row < 3; row++) {
             for (var col = 0; col < 3; col++) {
-                if (((gPanelOrder[gGrid - 1] == 3 || gPanelOrder[gGrid - 1] == 4) && row == 0 && col == 0) ||
-                     (gPanelOrder[gGrid - 1] == 5 && row == 0 && col == gFinancialMode) // the column number matches the value in gFinancialMode so the right button is hilighted
-                   ) {
+                if (((gPanelOrder[gGrid - 1] == 3 || gPanelOrder[gGrid - 1] == 4) && row == 0 && col == 0)) {
                     drawInside(dc, width / 3 * col + width / 6, height / 5 * (row + 1) + height / 10, row * 3 + col + 1, array[row][col], gInvActive, font);
                 }
                 else {
@@ -189,9 +206,12 @@ class CalculatorView extends WatchUi.View {
         }
         else {
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(width / 2, screenShape == System.SCREEN_SHAPE_RECTANGLE ? height / 16 : height / 11, Graphics.FONT_SMALL, (gAnswer != null ? gAnswer : "0"), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(width / 2, screenShape == System.SCREEN_SHAPE_RECTANGLE ? height / 16 : height / 11, Graphics.FONT_SMALL, (gDataEntry ? (gAnswer != null ? gAnswer : "0") : limitDigits(gAnswer != null ? gAnswer : "0")), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
             if (gAnswer != null) {
                  Storage.setValue("answer", gAnswer);
+            }
+            if (gOpText != null) {
+                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width - (width / 3 - width / 6)), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, gOpText, Graphics.TEXT_JUSTIFY_RIGHT | Graphics.TEXT_JUSTIFY_VCENTER);
             }
         }
 

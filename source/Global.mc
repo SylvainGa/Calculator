@@ -27,33 +27,56 @@ function to_array(string, splitter) {
 }
 
 function stripTrailinZeros(number) {
-    var dotPos;
     if (number == null) {
         number = "0";
     }
-    var numberStr = number.toDouble().toString();
 
-    dotPos = numberStr.find(".");
+    var numberStr = number.toString();
+
+    var dotPos = numberStr.find(".");
     if (dotPos == null) {
         numberStr = number.toNumber();
     }
     else {
         var numberArray = numberStr.toCharArray(); 
-        var i;
-        for (i = numberStr.length() - 1; i > dotPos; i--) {
-            if (numberArray[i] != '0') {
+        var index;
+
+        for  (index = numberStr.length() - 1; index > dotPos; index--) {
+            if (numberArray[index] != '0') {
                 break;
             }
         }
-        if (numberArray[i] == '.') {
-            i--;
-        }
 
-        numberStr = numberStr.substring(0, i + 1);
+        numberStr = numberStr.substring(0, index + 1); // Keep only what's necessary
     }
 
     if (numberStr instanceof Lang.String && numberStr.equals("-0")) {
         numberStr = "0";
     }
+
     return numberStr.toString();
 }
+
+// Limit the number of digits
+function limitDigits(answer) {
+    if (answer == null) {
+        answer = "0";
+    }
+
+    var answerStr = answer.toString();
+
+    // Because of precision error, it could try to display "-0", don't
+    if (answerStr.equals("-0")) {
+        answerStr = "0";
+    }
+
+    var dotPos = answerStr.find(".");
+    if (dotPos != null) {
+        if (dotPos + gDigits + 1 < answerStr.length()) { // (+ 1 because dotPos is zero based)
+            answerStr = answerStr.toDouble().format("%0." + gDigits + "f");
+        }
+    }
+
+    return answerStr.toString();
+}
+
