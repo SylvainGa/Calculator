@@ -6,8 +6,8 @@ class NoGlanceDelegate extends Ui.BehaviorDelegate {
     }
 
     function onSelect() {
-        var view = new CalculatorView();
         var delegate = new CalculatorDelegate();
+        var view = new CalculatorView(delegate);
         Ui.pushView(view, delegate, Ui.SLIDE_UP);
         return true;
     }

@@ -77,6 +77,11 @@ function limitDigits(answer) {
         }
     }
 
-    return answerStr.toString();
+    if (gDigitsChanged) {
+        return answerStr.toString();
+    }
+    else {
+        return stripTrailinZeros(answerStr.toString());
+    }
 }
 

@@ -13,6 +13,7 @@ enum { Begin, End }
 
 var gAnswer = null;
 var gDigits = 2;
+var gDigitsChanged = false;
 var gDataEntry = false; // When true, we are actively inputing digits
 var gGrid = 1;
 var gHilight = 0;
@@ -211,13 +212,13 @@ class CalculatorView extends WatchUi.View {
                  Storage.setValue("answer", gAnswer);
             }
             if (gOpText != null) {
-                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width - (width / 3 - width / 6)), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, gOpText, Graphics.TEXT_JUSTIFY_RIGHT | Graphics.TEXT_JUSTIFY_VCENTER);
+                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? width : width - (width / 3 - width / 6)), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, gOpText, Graphics.TEXT_JUSTIFY_RIGHT | Graphics.TEXT_JUSTIFY_VCENTER);
             }
         }
 
         if (gText != null) {
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, gText, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? width : width - (width / 3 - width / 6)), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, gText, Graphics.TEXT_JUSTIFY_RIGHT | Graphics.TEXT_JUSTIFY_VCENTER);
         }
         else {
             if (gMemory != null || gCurrentHistoryIncIndex != null) {

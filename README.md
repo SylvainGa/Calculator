@@ -65,7 +65,7 @@ V1.1.0 Added the following:
     - YEARS: The term of the saving in years
     - I/Y: The YEARLY interest rate (enter 10 for 10%)
     - P/Y: Period per year. If monthly, enter 12. For yearly, enter 1.
-    - Recall: Press this followed by one of the buttons above to retreive the current saved or4 calculated value.
+    - Recall: Press this followed by one of the buttons above to retreive the current saved or calculated value.
     - Calc: Calculate the corresponding field. Currently, the following work: PV, FV, DEP, YEARS and I/Y. For PV, FV, and DEP, you can enter PV or DEP or BOTH.
   Loan:
     - L: Loan
@@ -74,7 +74,7 @@ V1.1.0 Added the following:
     - YEARS: The term of the saving in years
     - I/Y: The YEARLY interest rate (enter 10 for 10%)
     - P/Y: Period per year. If monthly, enter 12. For yearly, enter 1.
-    - Recall: Press this followed by one of the buttons above to retreive the current saved or4 calculated value.
+    - Recall: Press this followed by one of the buttons above to retreive the current saved or calculated value.
     - Calc: Calculate the corresponding field. Currently, the following work: L, TC, PMT.
 
   A field with data in it will show a '*' beside it. Entering 0 in a field clears the value.
@@ -87,8 +87,8 @@ V1.1.0 Added the following:
       Calc FV
 
 - The memory value is saved and restored when the app is relaunched. Storing 0 deletes it.
-- Swiping the result window left and right changes the number of digits after the decimal points. Works when a value is displayed, not when entering a number
-- When a arithmetic operation is selected, it will show up on the right edge of the result windows.
+- Swiping the result window left or right changes the number of digits after the decimal points. Works when a value is displayed, not when entering a number. The number of digits is saved and restored on the next launch.
+- When an arithmetic operation is selected, it will show up on the right edge of the result windows.
 
 V1.0.2 Fixed a crash while calculating
 

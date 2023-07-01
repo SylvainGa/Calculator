@@ -87,6 +87,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
         gCurrentHistoryIncIndex = null;
         gOpText = null;
         gDataEntry = false;
+        gDigitsChanged = false;
 
         mTimer.start(method(:doUpdate), 100, false);
 
@@ -871,11 +872,11 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             mOps[mOps_pos] = null;
                             break;
 
-                        case 10:
+                        case 10: // Recall
                             mRecall = !mRecall;
                             break;
 
-                        case 11:
+                        case 11: // Calc
                             mCalc = !mCalc;
                             gError = null;
                             break;
@@ -1071,7 +1072,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         }
                         else {
                             gAnswer = stripTrailinZeros(float);
-                            mInterestPerYear = float;
+                            mInterestPerYear = float / 100.0;
                         }
                         break;
 
@@ -1279,24 +1280,27 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
     function onDrag(dragEvent ) {
         var coord = dragEvent.getCoordinates();
+
         if (dragEvent.getType() == WatchUi.DRAG_TYPE_START) {
             mDragStartX = coord[0];
             mDragStartY = coord[1];
         }
         else if (dragEvent.getType() == WatchUi.DRAG_TYPE_STOP) {
             var height = System.getDeviceSettings().screenHeight;
-
             if (mDragStartY < height / 5) { // 'Swiped' the answer portion, only test if left or right
                 if (gDataEntry) {
                     return true; // No digit resizing while entering data
                 }
-                if (mDragStartX < coord[0]) {  // 'Swiped' right
+
+                gDigitsChanged = true;
+
+                if (mDragStartX > coord[0]) {  // 'Swiped' left
                     gDigits++;
                     if (gDigits > 8) {
                         gDigits = 8;
                     }
                 }
-                else {   // 'Swiped' left
+                else {   // 'Swiped' right
                     var answerStr = limitDigits(gAnswer); // Get the number we should be displaying so we can drop the last digit
                     var dotPos = answerStr.find(".");
                     if (dotPos != null) {
@@ -1315,6 +1319,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
             }
             // Main area of the screen was swiped, keep the direction with the most movement
             else {
+                gDigitsChanged = false;
+
                 var xMovement = (mDragStartX - coord[0]).abs();
                 var yMovement = (mDragStartY - coord[1]).abs();
 
