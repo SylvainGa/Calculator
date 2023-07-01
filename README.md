@@ -88,6 +88,9 @@ V1.1.0 Added the following:
 
 - The memory value is saved and restored when the app is relaunched. Storing 0 deletes it.
 - Swiping the result window left and right changes the number of digits after the decimal points. Works when a value is displayed, not when entering a number
+- When a arithmetic operation is selected, it will show up on the right edge of the result windows.
+
+V1.0.2 Fixed a crash while calculating
 
 V1.0.1 Fixed a crash while stripping trailing zeros from the answer
 
