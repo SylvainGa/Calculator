@@ -86,6 +86,8 @@ V1.1.0 Added the following:
       1 P/Y
       Calc FV
 
+   If have the missing formulas, get in contact with me (github or email) and I'll see what I can do.
+
 - The memory value is saved and restored when the app is relaunched. Storing 0 deletes it.
 - Swiping the result window left or right changes the number of digits after the decimal points. Works when a value is displayed, not when entering a number. The number of digits is saved and restored on the next launch.
 - When an arithmetic operation is selected, it will show up on the right edge of the result windows.
