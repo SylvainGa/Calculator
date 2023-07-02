@@ -31,8 +31,16 @@ function stripTrailinZeros(number) {
         number = "0";
     }
 
-    var numberStr = number.toString();
+    if (number instanceof Lang.String) {
+        if (number.equals("-0")) {
+        return("0");
+        }
+        if (number.equals("-")) {
+        return("-");
+        }
+    }
 
+    var numberStr = number.toString();
     var dotPos = numberStr.find(".");
     if (dotPos == null) {
         numberStr = number.toNumber();

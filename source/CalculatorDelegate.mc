@@ -33,6 +33,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
     var mOps_pos; 
     var mHistorySize;
     var mCountHistory;
+    var mParenCount;
 
     // Financial var
     var mPresentValue;
@@ -70,7 +71,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
         mRecall = false;
         mCalc = false;
         mDataChanged = false;
-
+        mParenCount = 0;
         mFinancialMissingPV = false;
         mFinancialMissingFV = false;
         mFinancialMissingDEP = false;
@@ -120,6 +121,32 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
         mTimer.start(method(:doUpdate), 100, false);
 
         gHilight = findTapPos(x, y);
+
+        /*DEBUG
+        for (var i = 0; i <= mOps_pos; i++) {
+            if (i == 0) {
+                System.print("Before: " + mOps_pos.format("%02d") + " ");
+            }
+            System.print("[" + i.format("%02d") + "]=");
+            var c = mOps[i];
+            if (c == null) {
+                System.print("{null}");
+            }
+            else if (c instanceof Lang.String) {
+                System.print(c);
+            }
+            else if (c instanceof Lang.Number) {
+                var opsArray = ["DOT", "(", ")", "CA", "DD", "+", "-", "*", "/", "%", "MS", "MR"];
+                System.print("'" + opsArray[c] + "'");
+            }
+            else {
+                System.print("Unknown: '" + c + "'");
+            }
+
+        }
+        System.println("");
+        /*DEBUG*/
+
         if (gHilight > 0) {
             switch (gPanelOrder[gGrid - 1]) {
                 case 1:
@@ -151,18 +178,24 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                 case 2:
                     switch (gHilight) {
                         case 1: // ParenOpen
-                            // We just tag its place in the queue so ParenClose can do its thing
+                            // '(' must NOT be preceded by a 'number' (a string here)
                             if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
                                 gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                                 break;
                             }
+                            // We just tag its place in the queue so ParenClose can do its thing
                             mOps[mOps_pos] = Oper_ParenOpen;
                             mOps_pos++;
                             mOps[mOps_pos] = null;
-                            gOpText = "(";
+                            mParenCount++;
+                            gOpText = "(x" + mParenCount;
                             break;
 
                         case 2: // ParenClose
+                            if (mParenCount == 0) {
+                                break;
+                            }
+
                             do {
                                 calcPrevious(Oper_ParenClose);
                             } while (mOps_pos > 0 && mOps[mOps_pos - 1] != Oper_ParenOpen);
@@ -172,7 +205,11 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 mOps_pos--;
                             }
                             mOps[mOps_pos + 1] = null;
-                            gOpText = ")";
+                            mParenCount--;
+                            if (mParenCount < 0) {
+                                mParenCount = 0;
+                            }
+                            gOpText = "(x" + mParenCount;
                             break;
 
                         case 3: // CA
@@ -180,6 +217,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 mOps[i] = null;
                             }
                             mOps_pos = 0;
+                            mParenCount = 0;
                             gAnswer = null;
                             gError = null;
                             gInvActive = false;
@@ -193,6 +231,10 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             }
                             // We currently have something in the input queue and that something is a 'number' (shown as a string)
                             if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
+                                if (mOps[mOps_pos].equals("-")) { // Can't be just a '-'
+                                    gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                                    break;
+                                }
                                 calcPrevious(Oper_Add);
                                 mOps_pos++;
                                 mOps[mOps_pos] = Oper_Add;
@@ -258,6 +300,10 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             }
                             // We currently have something in the input queue and that something is a 'number' (shown as a string)
                             if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
+                                if (mOps[mOps_pos].equals("-")) { // Can't be just a '-'
+                                    gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                                    break;
+                                }
                                 calcPrevious(Oper_Multiply);
                                 mOps_pos++;
                                 mOps[mOps_pos] = Oper_Multiply;
@@ -278,6 +324,10 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             }
                             // We currently have something in the input queue and that something is a 'number' (shown as a string)
                             if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
+                                if (mOps[mOps_pos].equals("-")) { // Can't be just a '-'
+                                    gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                                    break;
+                                }
                                 calcPrevious(Oper_Divide);
                                 mOps_pos++;
                                 mOps[mOps_pos] = Oper_Divide;
@@ -298,6 +348,10 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             }
                             // We currently have something in the input queue and that something is a 'number' (shown as a string)
                             if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
+                                if (mOps[mOps_pos].equals("-")) { // Can't be just a '-'
+                                    gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                                    break;
+                                }
                                 calcPrevious(Oper_Percent);
                             }
                             gOpText = "%";
@@ -333,6 +387,10 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                     break;
 
                 case 3:
+                    if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String && mOps[mOps_pos].equals("-")) {
+                        gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                        break;
+                    }
                     switch (gHilight) {
                         case 1: // INV
                             gInvActive = !gInvActive;
@@ -356,6 +414,10 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             }
                             // We currently have something in the input queue and that something is a 'number' (shown as a string)
                             if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
+                                if (mOps[mOps_pos].equals("-")) {
+                                    gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                                    break;
+                                }
                                 var float = mOps[mOps_pos].toFloat();
                                 try {
                                     if (gInvActive) {
@@ -537,6 +599,10 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                     break;
 
                 case 4:
+                    if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String && mOps[mOps_pos].equals("-")) {
+                        gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                        break;
+                    }
                     switch (gHilight) {
                         case 1: // INV
                             gInvActive = !gInvActive;
@@ -735,6 +801,10 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                     break;
                 case 5:
                     gText = null;
+                    if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String && mOps[mOps_pos].equals("-")) {
+                        gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                        break;
+                    }
                     switch (gHilight) {
                         case 1: // Fut.V/Loan
                             gFinancialMode = (gFinancialMode == FutureValue ? Loan : FutureValue);
@@ -919,6 +989,10 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                     }
                     if (gHilight != 9 && gHilight != 11) {
                         gDataReset = false;
+                    }
+                    if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String && mOps[mOps_pos].equals("-")) {
+                        gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                        break;
                     }
                     switch (gHilight) {
                         case 1: // MEAN
@@ -1200,10 +1274,37 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                 Storage.setValue("HistoryIndex", gCurrentHistoryIndex);
                 gCurrentHistoryIncIndex = null;
 
+                mParenCount = 0;
                 mOps_pos = 0;
                 mOps[mOps_pos] = null;
+                gOpText = "=";
             }
         }
+
+        /*DEBUG
+        for (var i = 0; i <= mOps_pos; i++) {
+            if (i == 0) {
+                System.print("After : " + mOps_pos.format("%02d") + " ");
+            }
+            System.print("[" + i.format("%02d") + "]=");
+            var c = mOps[i];
+            if (c == null) {
+                System.print("{null}");
+            }
+            else if (c instanceof Lang.String) {
+                System.print(c);
+            }
+            else if (c instanceof Lang.Number) {
+                var opsArray = ["DOT", "(", ")", "CA", "DD", "+", "-", "*", "/", "%", "MS", "MR"];
+                System.print("'" + opsArray[c] + "'");
+            }
+            else {
+                System.print("Unknown: '" + c + "'");
+            }
+        }
+        System.println("");
+        /*DEBUG*/
+
 
         WatchUi.requestUpdate();
  
@@ -1596,6 +1697,13 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
         // Since try/catch doesn't "catch" null, we need to check for them first.
         if (left == null || right == null) {
             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+            // Clear up the stack so we don't get stuck in an infinite loop
+            do {
+                mOps[mOps_pos] = null;
+                mOps_pos--;
+            } while (mOps_pos >= 0);
+            mOps_pos = 0;
+            mParenCount = 0;
             return;
         }
 
@@ -1610,11 +1718,23 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
         }
         catch (e) {
             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+            do {
+                mOps[mOps_pos] = null;
+                mOps_pos--;
+            } while (mOps_pos >= 0);
+            mOps_pos = 0;
+            mParenCount = 0;
             return;
         }
 
         if (left == null || right == null) {
             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+            do {
+                mOps[mOps_pos] = null;
+                mOps_pos--;
+            } while (mOps_pos >= 0);
+            mOps_pos = 0;
+            mParenCount = 0;
             return;
         }
 
@@ -1669,6 +1789,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                 }
                 else {
                     gError = WatchUi.loadResource(Rez.Strings.label_divide0);
+                    do {
+                        mOps[mOps_pos] = null;
+                        mOps_pos--;
+                    } while (mOps_pos >= 0);
+                    mOps_pos = 0;
+                    mParenCount = 0;
                 }
                 break;
 
@@ -1679,6 +1805,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                     }
                     else {
                         gError = WatchUi.loadResource(Rez.Strings.label_divide0);
+                        do {
+                            mOps[mOps_pos] = null;
+                            mOps_pos--;
+                        } while (mOps_pos >= 0);
+                        mOps_pos = 0;
+                        mParenCount = 0;
                     }
                 }
                 else {

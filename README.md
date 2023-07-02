@@ -52,6 +52,7 @@ If you like the widget, please consider [leaving a positive review](https://apps
 If you want to have the widget translated to your language, contact me through email or github.
 
 ## Changelog
+V1.2.1 Bug fix in the parenthesis arithmetic code plus display how many levels of parenthesis are opened on the screen to help you track your calculations.
 
 V1.2.0 Added the following:
 - Added a Statistic panel with the following option. Similar to the Financial panel, I'm not a statistician. I got the formula from the web. I do not guaranty the result are accurate, although my tests yielded the right result. Use at your own risk.
