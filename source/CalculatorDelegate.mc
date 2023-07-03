@@ -34,6 +34,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
     var mHistorySize;
     var mCountHistory;
     var mParenCount;
+    var mPercentPending;
 
     // Financial var
     var mPresentValue;
@@ -72,6 +73,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
         mCalc = false;
         mDataChanged = false;
         mParenCount = 0;
+        mPercentPending = false;
         mFinancialMissingPV = false;
         mFinancialMissingFV = false;
         mFinancialMissingDEP = false;
@@ -218,6 +220,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             }
                             mOps_pos = 0;
                             mParenCount = 0;
+                            mPercentPending = false;
                             gAnswer = null;
                             gError = null;
                             gInvActive = false;
@@ -226,7 +229,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
                         case 4: // Add
                             // If we didn't type a number, use what's on the display for the first number
-                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
+                            if (/*mOps_pos == 0 &&*/ mOps[mOps_pos] == null) {
                                 mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
                             }
                             // We currently have something in the input queue and that something is a 'number' (shown as a string)
@@ -250,7 +253,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
                         case 5: // Substract (or negative number)
                             // If we didn't type a number, use what's on the display for the first number
-                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
+                            if (/*mOps_pos == 0 &&*/ mOps[mOps_pos] == null) {
                                 mOps[mOps_pos] = gAnswer; // Different from the other here to accomodate for the leading '-'
                             }
                             // We currently have something in the input queue
@@ -295,7 +298,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
                         case 7: // Multiply
                             // If we didn't type a number, use what's on the display for the first number
-                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
+                            if (/*mOps_pos == 0 &&*/ mOps[mOps_pos] == null) {
                                 mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
                             }
                             // We currently have something in the input queue and that something is a 'number' (shown as a string)
@@ -319,7 +322,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
                         case 8: // Divide
                             // If we didn't type a number, use what's on the display for the first number
-                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
+                            if (/*mOps_pos == 0 &&*/ mOps[mOps_pos] == null) {
                                 mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
                             }
                             // We currently have something in the input queue and that something is a 'number' (shown as a string)
@@ -343,7 +346,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
                         case 9: // Percent
                             // If we didn't type a number, use what's on the display for the first number
-                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
+                            if (/*mOps_pos == 0 &&*/ mOps[mOps_pos] == null) {
                                 mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
                             }
                             // We currently have something in the input queue and that something is a 'number' (shown as a string)
@@ -352,8 +355,29 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                                     break;
                                 }
-                                calcPrevious(Oper_Percent);
-                            }
+
+                                var float = getNumber(mOps[mOps_pos]);
+                                if (float == null) {
+                                    gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                                    break;
+                                }
+
+                                gAnswer = stripTrailingZeros(float / 100.0);
+                                mOps[mOps_pos] = null;
+
+                                if (mOps_pos > 1 && mOps[mOps_pos - 2] instanceof Lang.String && mOps[mOps_pos - 1] instanceof Lang.Number && (mOps[mOps_pos - 1] == Oper_Add || mOps[mOps_pos - 1] == Oper_Substract)) {
+                                    // Percentage operation with an addition or substraction just before
+                                    var left = getNumber(mOps[mOps_pos - 2]);
+                                    if (left == null) {
+                                        gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                                        break;
+                                    }
+
+                                    gAnswer = stripTrailingZeros(left * float / 100.0);
+                                    mOps[mOps_pos] = null;
+                                    mPercentPending = true;
+                                }
+                           }
                             gOpText = "%";
                             break;
 
@@ -362,7 +386,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 mOps[mOps_pos] = gAnswer;
                             }
                             if (mOps[mOps_pos] != null) {
-                                gAnswer = stripTrailinZeros(mOps[mOps_pos]);
+                                gAnswer = stripTrailingZeros(mOps[mOps_pos]);
                                 if (gAnswer.toFloat() != 0.0) {
                                     gMemory = gAnswer;
                                     Storage.setValue("Memory", gMemory);
@@ -401,7 +425,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             break;
 
                         case 3: // Pi
-                            gAnswer = stripTrailinZeros(Math.PI);
+                            gAnswer = stripTrailingZeros(Math.PI);
                             mOps[mOps_pos] = gAnswer;
                             break;
 
@@ -437,7 +461,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                                         }
 
-                                        gAnswer = stripTrailinZeros(gDegRad == Degree ? Math.toDegrees(rad) : rad);
+                                        gAnswer = stripTrailingZeros(gDegRad == Degree ? Math.toDegrees(rad) : rad);
                                         mOps[mOps_pos] = null;
                                     }
                                     else {
@@ -458,7 +482,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                                         }
                                         else {
-                                            gAnswer = stripTrailinZeros(float);
+                                            gAnswer = stripTrailingZeros(float);
                                         }
 
                                         mOps[mOps_pos] = null;
@@ -504,7 +528,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                         gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                                     }
                                     else {
-                                        gAnswer = stripTrailinZeros(float);
+                                        gAnswer = stripTrailingZeros(float);
                                     }
 
                                     mOps[mOps_pos] = null;
@@ -527,7 +551,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
                                 var float = mOps[mOps_pos].toFloat();
                                 if (float != 0.0) {
-                                    gAnswer = stripTrailinZeros(1.0 / float);
+                                    gAnswer = stripTrailingZeros(1.0 / float);
                                     mOps[mOps_pos] = null;
                                 }
                                 else {
@@ -559,7 +583,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                         gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                                     }
                                     else {
-                                        gAnswer = stripTrailinZeros(float);
+                                        gAnswer = stripTrailingZeros(float);
                                     }
 
                                     mOps[mOps_pos] = null;
@@ -623,12 +647,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 if (gInvActive) {
                                     float = float * 9.0 / 5.0;
                                     float += 32.0;
-                                    gAnswer = stripTrailinZeros(float);
+                                    gAnswer = stripTrailingZeros(float);
                                 }
                                 else {
                                     float -= 32.0;
                                     float = float * 5.0 / 9.0;
-                                    gAnswer = stripTrailinZeros(float);
+                                    gAnswer = stripTrailingZeros(float);
                                 }
                                 mOps[mOps_pos] = null;
                             }
@@ -646,10 +670,10 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 var float = mOps[mOps_pos].toFloat();
                                 var convUnit = (gConvUnit == Imperial ? 4.54609 : 3.78541);
                                 if (gInvActive) {
-                                    gAnswer = stripTrailinZeros(float / convUnit);
+                                    gAnswer = stripTrailingZeros(float / convUnit);
                                 }
                                 else {
-                                    gAnswer = stripTrailinZeros(float * convUnit);
+                                    gAnswer = stripTrailingZeros(float * convUnit);
                                 }
                                 mOps[mOps_pos] = null;
                             }
@@ -666,10 +690,10 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
                                 var float = mOps[mOps_pos].toFloat();
                                 if (gInvActive) {
-                                    gAnswer = stripTrailinZeros(float / 29.5735);
+                                    gAnswer = stripTrailingZeros(float / 29.5735);
                                 }
                                 else {
-                                    gAnswer = stripTrailinZeros(float * 29.5735);
+                                    gAnswer = stripTrailingZeros(float * 29.5735);
                                 }
                                 mOps[mOps_pos] = null;
                             }
@@ -687,10 +711,10 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 var float = mOps[mOps_pos].toFloat();
                                 var convUnit = (gConvUnit == Imperial ? 284.131 : 240);
                                 if (gInvActive) {
-                                    gAnswer = stripTrailinZeros(float / convUnit);
+                                    gAnswer = stripTrailingZeros(float / convUnit);
                                 }
                                 else {
-                                    gAnswer = stripTrailinZeros(float * convUnit);
+                                    gAnswer = stripTrailingZeros(float * convUnit);
                                 }
                                 mOps[mOps_pos] = null;
                             }
@@ -707,10 +731,10 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
                                 var float = mOps[mOps_pos].toFloat();
                                 if (gInvActive) {
-                                    gAnswer = stripTrailinZeros(float / 1.60934);
+                                    gAnswer = stripTrailingZeros(float / 1.60934);
                                 }
                                 else {
-                                    gAnswer = stripTrailinZeros(float * 1.60934);
+                                    gAnswer = stripTrailingZeros(float * 1.60934);
                                 }
                                 mOps[mOps_pos] = null;
                             }
@@ -727,10 +751,10 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
                                 var float = mOps[mOps_pos].toFloat();
                                 if (gInvActive) {
-                                    gAnswer = stripTrailinZeros(float / 30.48);
+                                    gAnswer = stripTrailingZeros(float / 30.48);
                                 }
                                 else {
-                                    gAnswer = stripTrailinZeros(float * 30.48);
+                                    gAnswer = stripTrailingZeros(float * 30.48);
                                 }
                                 mOps[mOps_pos] = null;
                             }
@@ -747,10 +771,10 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
                                 var float = mOps[mOps_pos].toFloat();
                                 if (gInvActive) {
-                                    gAnswer = stripTrailinZeros(float / 0.453592);
+                                    gAnswer = stripTrailingZeros(float / 0.453592);
                                 }
                                 else {
-                                    gAnswer = stripTrailinZeros(float * 0.453592);
+                                    gAnswer = stripTrailingZeros(float * 0.453592);
                                 }
                                 mOps[mOps_pos] = null;
                             }
@@ -767,10 +791,10 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
                                 var float = mOps[mOps_pos].toFloat();
                                 if (gInvActive) {
-                                    gAnswer = stripTrailinZeros(float / 1.60934);
+                                    gAnswer = stripTrailingZeros(float / 1.60934);
                                 }
                                 else {
-                                    gAnswer = stripTrailinZeros(float * 1.60934);
+                                    gAnswer = stripTrailingZeros(float * 1.60934);
                                 }
                                 mOps[mOps_pos] = null;
                             }
@@ -787,10 +811,10 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
                                 var float = mOps[mOps_pos].toFloat();
                                 if (gInvActive) {
-                                    gAnswer = stripTrailinZeros(float / 4046.86);
+                                    gAnswer = stripTrailingZeros(float / 4046.86);
                                 }
                                 else {
-                                    gAnswer = stripTrailinZeros(float * 4046.86);
+                                    gAnswer = stripTrailingZeros(float * 4046.86);
                                 }
                                 mOps[mOps_pos] = null;
                             }
@@ -819,7 +843,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
                         case 4: // PV
                             if (mRecall) {
-                                gAnswer = stripTrailinZeros(mPresentValue);
+                                gAnswer = stripTrailingZeros(mPresentValue);
                                 mRecall = false;
                                 break;
                             }
@@ -833,7 +857,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             }
                             // We currently have something in the input queue and that something is a 'number' (shown as a string), use that
                             if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                gAnswer = stripTrailinZeros(mOps[mOps_pos].toFloat());
+                                gAnswer = stripTrailingZeros(mOps[mOps_pos].toFloat());
                             }
                             mPresentValue = gAnswer.toFloat();
                             if (mPresentValue == 0.0) {
@@ -845,7 +869,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
                         case 5: // FV
                             if (mRecall) {
-                                gAnswer = stripTrailinZeros(mFutureValue);
+                                gAnswer = stripTrailingZeros(mFutureValue);
                                 mRecall = false;
                                 break;
                             }
@@ -859,7 +883,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             }
                             // We currently have something in the input queue and that something is a 'number' (shown as a string), use that
                             if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                gAnswer = stripTrailinZeros(mOps[mOps_pos].toFloat());
+                                gAnswer = stripTrailingZeros(mOps[mOps_pos].toFloat());
                             }
                             mFutureValue = gAnswer.toFloat();
                             if (mFutureValue == 0.0) {
@@ -870,7 +894,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
                         case 6: // DEP/PMT
                             if (mRecall) {
-                                gAnswer = stripTrailinZeros(mPayment);
+                                gAnswer = stripTrailingZeros(mPayment);
                                 mRecall = false;
                                 break;
                             }
@@ -884,7 +908,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             }
                             // We currently have something in the input queue and that something is a 'number' (shown as a string), use that
                             if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                gAnswer = stripTrailinZeros(mOps[mOps_pos].toFloat());
+                                gAnswer = stripTrailingZeros(mOps[mOps_pos].toFloat());
                             }
                             mPayment = gAnswer.toFloat();
                             if (mPayment == 0.0) {
@@ -895,7 +919,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
                         case 7: // YEARS
                             if (mRecall) {
-                                gAnswer = stripTrailinZeros(mYears);
+                                gAnswer = stripTrailingZeros(mYears);
                                 mRecall = false;
                                 break;
                             }
@@ -909,7 +933,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             }
                             // We currently have something in the input queue and that something is a 'number' (shown as a string), use that
                             if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                gAnswer = stripTrailinZeros(mOps[mOps_pos].toFloat());
+                                gAnswer = stripTrailingZeros(mOps[mOps_pos].toFloat());
                             }
                             mYears = gAnswer.toFloat();
                             if (mYears == 0.0) {
@@ -921,7 +945,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         case 8: // I/Y
                             if (mRecall) {
                                 if (mInterestPerYear != null) {
-                                    gAnswer = stripTrailinZeros(mInterestPerYear * 100.0);
+                                    gAnswer = stripTrailingZeros(mInterestPerYear * 100.0);
                                 }
                                 mRecall = false;
                                 break;
@@ -936,7 +960,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             }
                             // We currently have something in the input queue and that something is a 'number' (shown as a string), use that
                             if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                gAnswer = stripTrailinZeros(mOps[mOps_pos].toFloat());
+                                gAnswer = stripTrailingZeros(mOps[mOps_pos].toFloat());
                             }
                             mInterestPerYear = gAnswer.toFloat() / 100.0;
                             if (mInterestPerYear == 0.0) {
@@ -947,7 +971,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
                         case 9: // P/Y
                             if (mRecall) {
-                                gAnswer = stripTrailinZeros(mPeriodsPerYear);
+                                gAnswer = stripTrailingZeros(mPeriodsPerYear);
                                 mRecall = false;
                                 break;
                             }
@@ -961,7 +985,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             }
                             // We currently have something in the input queue and that something is a 'number' (shown as a string), use that
                             if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                gAnswer = stripTrailinZeros(mOps[mOps_pos].toFloat());
+                                gAnswer = stripTrailingZeros(mOps[mOps_pos].toFloat());
                             }
                             mPeriodsPerYear = gAnswer.toFloat();
                             if (mPeriodsPerYear == 0.0) {
@@ -997,7 +1021,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                     switch (gHilight) {
                         case 1: // MEAN
                             if (gDataCount > 0) {
-                                gAnswer = stripTrailinZeros(gDataMean);
+                                gAnswer = stripTrailingZeros(gDataMean);
                                 gText = "MEAN=";
                             }
                             else {
@@ -1016,7 +1040,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 }
                                 ssdev = ssdev / (gDataCount - 1);
                                 ssdev = Math.sqrt(ssdev);
-                                gAnswer = stripTrailinZeros(ssdev);
+                                gAnswer = stripTrailingZeros(ssdev);
                                 gText = "SSDEV=";
                             }
                             else {
@@ -1035,7 +1059,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 }
                                 psdev = psdev / gDataCount;
                                 psdev = Math.sqrt(psdev);
-                                gAnswer = stripTrailinZeros(psdev);
+                                gAnswer = stripTrailingZeros(psdev);
                                 gText = "PSDEV=";
                             }
                             else {
@@ -1059,7 +1083,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     median = mDataPointsSorted[((gDataCount + 1) / 2) - 1];
                                 }
                                 
-                                gAnswer = stripTrailinZeros(median);
+                                gAnswer = stripTrailingZeros(median);
 
                                 gText = "MEDIAN=";
                             }
@@ -1078,7 +1102,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     variance += diff * diff;
                                 }
                                 variance = variance / gDataCount;
-                                gAnswer = stripTrailinZeros(variance);
+                                gAnswer = stripTrailingZeros(variance);
                                 gText = "VARIANCE=";
                             }
                             else {
@@ -1113,7 +1137,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                         currentValue = mDataPointsSorted[i];
                                     }
                                 }                                
-                                gAnswer = stripTrailinZeros(highestValue);
+                                gAnswer = stripTrailingZeros(highestValue);
                                 gText = "MODE=";
                             }
                             else {
@@ -1130,7 +1154,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     mDataChanged = false;
                                 }
                                 
-                                gAnswer = stripTrailinZeros(mDataPointsSorted[gDataCount - 1] - mDataPointsSorted[0]);
+                                gAnswer = stripTrailingZeros(mDataPointsSorted[gDataCount - 1] - mDataPointsSorted[0]);
                                 gText = "RANGE=";
                             }
                             else {
@@ -1143,7 +1167,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (gDataCount > 0) {
                                 gDataView = !gDataView;
                                 if (gDataView) {
-                                    gAnswer = stripTrailinZeros(gDataPoints[0]);
+                                    gAnswer = stripTrailingZeros(gDataPoints[0]);
                                     gDataViewPos = 0;
                                 }
                             }
@@ -1163,7 +1187,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             }
                             // We currently have something in the input queue and that something is a 'number' (shown as a string), use that
                             if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                gAnswer = stripTrailinZeros(mOps[mOps_pos].toFloat());
+                                gAnswer = stripTrailingZeros(mOps[mOps_pos].toFloat());
+                            }
+
+                            if (gAnswer == null) {
+                                gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                                break;
                             }
 
                             mDataChanged = true;
@@ -1202,7 +1231,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 }
                                 // We currently have something in the input queue and that something is a 'number' (shown as a string), use that
                                 if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                    gAnswer = stripTrailinZeros(mOps[mOps_pos].toFloat());
+                                    gAnswer = stripTrailingZeros(mOps[mOps_pos].toFloat());
                                 }
 
                                 if (gDataPoints != null && gDataPoints.indexOf(gAnswer.toFloat()) != -1) {
@@ -1239,7 +1268,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
             }
             if (mOps[mOps_pos] != null) {
                 calcPrevious(Oper_Equal);
-                gAnswer = stripTrailinZeros(mOps[mOps_pos]);
+                gAnswer = stripTrailingZeros(mOps[mOps_pos]);
                 // See if we have empty slots for our history
                 if (mCountHistory) {
                     var count = 0;
@@ -1275,6 +1304,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                 gCurrentHistoryIncIndex = null;
 
                 mParenCount = 0;
+                mPercentPending = false;
                 mOps_pos = 0;
                 mOps[mOps_pos] = null;
                 gOpText = "=";
@@ -1380,7 +1410,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                         }
                         else {
-                            gAnswer = stripTrailinZeros(float);
+                            gAnswer = stripTrailingZeros(float);
                             mPresentValue =  (float == 0.0 ? null : float);
                         }
                         break;
@@ -1426,7 +1456,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                         }
                         else {
-                            gAnswer = stripTrailinZeros(float);
+                            gAnswer = stripTrailingZeros(float);
                             mFutureValue = float;
                         }
                         break;
@@ -1469,7 +1499,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                         }
                         else {
-                            gAnswer = stripTrailinZeros(float);
+                            gAnswer = stripTrailingZeros(float);
                             mPayment = (float == 0.0 ? null : float);
                         }
                         break;
@@ -1508,7 +1538,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                         }
                         else {
-                            gAnswer = stripTrailinZeros(float);
+                            gAnswer = stripTrailingZeros(float);
                             mPeriodsPerYear = float;
                         }
                         break;
@@ -1547,7 +1577,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                         }
                         else {
-                            gAnswer = stripTrailinZeros(float);
+                            gAnswer = stripTrailingZeros(float);
                             mInterestPerYear = float / 100.0;
                         }
                         break;
@@ -1592,7 +1622,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                         }
                         else {
-                            gAnswer = stripTrailinZeros(float);
+                            gAnswer = stripTrailingZeros(float);
                             mPresentValue = (float == 0.0 ? null : float);
                         }
                         break;
@@ -1626,7 +1656,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                         }
                         else {
-                            gAnswer = stripTrailinZeros(float);
+                            gAnswer = stripTrailingZeros(float);
                             mFutureValue = (float == 0.0 ? null : float);
                         }
                         break;
@@ -1664,7 +1694,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                         }
                         else {
-                            gAnswer = stripTrailinZeros(float);
+                            gAnswer = stripTrailingZeros(float);
                             mPayment = (float == 0.0 ? null : float);
                         }
                         break;
@@ -1686,17 +1716,27 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
         }
 
     }
-    function calcPrevious(oper) {
-        if (mOps_pos < 2) {
-            return;
+
+    function getNumber(float)
+    {
+        if (float != null) {
+            try {
+                float = float.toFloat();
+            }
+            catch (e) {
+                // Clear up the stack so we don't get stuck in an infinite loop
+                do {
+                    mOps[mOps_pos] = null;
+                    mOps_pos--;
+                } while (mOps_pos >= 0);
+                mOps_pos = 0;
+                mParenCount = 0;
+                mPercentPending = false;
+                return null;
+            }
         }
-
-        var left = mOps[mOps_pos - 2];
-        var right = mOps[mOps_pos];
-
-        // Since try/catch doesn't "catch" null, we need to check for them first.
-        if (left == null || right == null) {
-            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+        
+        if (float == null) {
             // Clear up the stack so we don't get stuck in an infinite loop
             do {
                 mOps[mOps_pos] = null;
@@ -1704,50 +1744,46 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
             } while (mOps_pos >= 0);
             mOps_pos = 0;
             mParenCount = 0;
+            mPercentPending = false;
+            return null;
+        }
+        
+        return float;
+    }
+
+    function calcPrevious(oper) {
+        if (mOps_pos < 2) {
+            // Nothing to calculate
             return;
         }
 
-        if (left instanceof Lang.Number && left == 1) {
-            // left is an opened parenthesis, skip the calculation until we reach that corresponding close parenthesis
+        if (mOps[mOps_pos - 1] != null && mOps[mOps_pos - 1] instanceof Lang.Number && mOps[mOps_pos - 1] == Oper_ParenOpen) {
+        //if (left != null && left instanceof Lang.Number && left == Oper_ParenOpen) {
+            // Right behind us is an opened parenthesis, skip the calculation until we reach that corresponding close parenthesis
             return;
         }
 
-        try {
-            left = left.toFloat();
-            right = right.toFloat();
-        }
-        catch (e) {
-            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
-            do {
-                mOps[mOps_pos] = null;
-                mOps_pos--;
-            } while (mOps_pos >= 0);
-            mOps_pos = 0;
-            mParenCount = 0;
-            return;
+        var left = mOps[mOps_pos - 2];
+        var right = mOps[mOps_pos];
+        if (right == null) {
+            right = gAnswer;
         }
 
+        left = getNumber(left);
+        right = getNumber(right);
         if (left == null || right == null) {
             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
-            do {
-                mOps[mOps_pos] = null;
-                mOps_pos--;
-            } while (mOps_pos >= 0);
-            mOps_pos = 0;
-            mParenCount = 0;
             return;
-        }
-
-        if (oper == Oper_Percent) {
-            right = left * right / 100.0;
         }
 
         switch (mOps[mOps_pos - 1]) {
             case Oper_Add:
-                if (oper == Oper_Multiply || oper == Oper_Divide || oper == Oper_Exponent) {
+                if ((oper == Oper_Multiply || oper == Oper_Divide || oper == Oper_Exponent) && mPercentPending == false) {
                     return;
                 }
-                gAnswer = stripTrailinZeros(left + right);
+
+                mPercentPending = false;
+                gAnswer = stripTrailingZeros(left + right);
                 mOps[mOps_pos] = null;
                 mOps_pos--;
                 mOps[mOps_pos] = null;
@@ -1756,10 +1792,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                 break;
 
             case Oper_Substract:
-                if (oper == Oper_Multiply || oper == Oper_Divide || oper == Oper_Exponent) {
+                if ((oper == Oper_Multiply || oper == Oper_Divide || oper == Oper_Exponent) && mPercentPending == false) {
                     return;
                 }
-                gAnswer = stripTrailinZeros(left - right);
+
+                mPercentPending = false;
+                gAnswer = stripTrailingZeros(left - right);
                 mOps[mOps_pos] = null;
                 mOps_pos--;
                 mOps[mOps_pos] = null;
@@ -1768,7 +1806,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                 break;
 
             case Oper_Multiply:
-                gAnswer = stripTrailinZeros(left * right);
+                gAnswer = stripTrailingZeros(left * right);
                 mOps[mOps_pos] = null;
                 mOps_pos--;
                 mOps[mOps_pos] = null;
@@ -1779,7 +1817,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
             case Oper_Divide:
                 if (right != 0.0) {
-                    gAnswer = stripTrailinZeros(left / right);
+                    gAnswer = stripTrailingZeros(left / right);
                     mOps[mOps_pos] = null;
                     mOps_pos--;
                     mOps[mOps_pos] = null;
@@ -1795,13 +1833,18 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                     } while (mOps_pos >= 0);
                     mOps_pos = 0;
                     mParenCount = 0;
+                    mPercentPending = false;
                 }
                 break;
 
             case Oper_Exponent:
+                // if (oper == Oper_Percent) {
+                //     right /=  100.0;
+                // }
+
                 if (gInvActive) {
                     if (right != 0.0) {
-                        gAnswer = stripTrailinZeros(Math.pow(left, 1.0 / right));
+                        gAnswer = stripTrailingZeros(Math.pow(left, 1.0 / right));
                     }
                     else {
                         gError = WatchUi.loadResource(Rez.Strings.label_divide0);
@@ -1811,10 +1854,11 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         } while (mOps_pos >= 0);
                         mOps_pos = 0;
                         mParenCount = 0;
+                        mPercentPending = false;
                     }
                 }
                 else {
-                    gAnswer = stripTrailinZeros(Math.pow(left, right));
+                    gAnswer = stripTrailingZeros(Math.pow(left, right));
                 }
 
                 mOps[mOps_pos] = null;
@@ -1914,7 +1958,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (gDataViewPos < 0) {
                                 gDataViewPos = gDataCount - 1;
                             }
-                            gAnswer = stripTrailinZeros(gDataPoints[gDataViewPos]);
+                            gAnswer = stripTrailingZeros(gDataPoints[gDataViewPos]);
                         }
                         else {
                             if (mHistorySize == 0) {
@@ -1973,7 +2017,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (gDataViewPos >= gDataCount) {
                                 gDataViewPos = 0;
                             }
-                            gAnswer = stripTrailinZeros(gDataPoints[gDataViewPos]);
+                            gAnswer = stripTrailingZeros(gDataPoints[gDataViewPos]);
                         }
                         else {
                             if (mHistorySize == 0) {

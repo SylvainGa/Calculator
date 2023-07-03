@@ -26,7 +26,7 @@ function to_array(string, splitter) {
 	return result;
 }
 
-function stripTrailinZeros(number) {
+function stripTrailingZeros(number) {
     if (number == null) {
         number = "0";
     }
@@ -89,7 +89,7 @@ function limitDigits(answer) {
         return answerStr.toString();
     }
     else {
-        return stripTrailinZeros(answerStr.toString());
+        return stripTrailingZeros(answerStr.toString());
     }
 }
 
