@@ -2,4 +2,5 @@
 	<property id="AppVersion" type="string"></property>
 	<property id="historySize" type="number">10</property>
 	<property id="panelOrder" type="string">1,2,3,4,5,6</property>
+	<property id="vibrateOnTouch" type="boolean">false</property>
 </properties>

@@ -17,7 +17,7 @@ class CalculatorApp extends Application.AppBase {
         if (state != null) {
             if (state.get(:launchedFromComplication) != null) {
                 if (Attention has :vibrate) {
-                    var vibeData = [ new Attention.VibeProfile(50, 200) ]; // On for half a second
+                    var vibeData = [ new Attention.VibeProfile(50, 200) ]; // On for 200 ms at 50% duty cycle
                     Attention.vibrate(vibeData);
                 }
             }

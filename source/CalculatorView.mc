@@ -77,7 +77,7 @@ class CalculatorView extends WatchUi.View {
                         break;
                     }
 
-                    if (val != null && val > 0 && val < GRID_COUNT) {
+                    if (val != null && val > 0 && val <= GRID_COUNT) {
                         gPanelOrder[i] = val;
                     }
                     else {
@@ -151,7 +151,7 @@ class CalculatorView extends WatchUi.View {
             case 2:
                 array1 = [" ( ", " ) ", "CA"];
                 array2 = [" + ", " - ", "DD"];
-                array3 = [" * ", " ÷ ", " % "];
+                array3 = [" × ", " ÷ ", " % "];
                 array = [array1, array2, array3];
                 font = Graphics.FONT_SMALL;
 
@@ -160,7 +160,7 @@ class CalculatorView extends WatchUi.View {
                         drawInside(dc, width / 3 * col + width / 6, height / 5 * (row + 1) + height / 10, row * 3 + col + 1, array[row][col], false, font);
                     }
                 }
-                drawInside(dc, width / 4 + (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 10, "MS", false, Graphics.FONT_SMALL);
+                drawInside(dc, width / 4 + (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 10, (gMemory == null ? "MS" : "M+"), false, Graphics.FONT_SMALL);
                 drawInside(dc, width - width / 4 - (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 11, "MR", false, Graphics.FONT_SMALL);
                 break;
 
@@ -268,7 +268,7 @@ class CalculatorView extends WatchUi.View {
             if (gAnswer != null) {
                  Storage.setValue("answer", gAnswer);
             }
-            if (gOpText != null) {
+            if (gOpText != null && gText == null) {
                 dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? width : width - (width / 3 - width / 6)), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, gOpText, Graphics.TEXT_JUSTIFY_RIGHT | Graphics.TEXT_JUSTIFY_VCENTER);
             }
         }

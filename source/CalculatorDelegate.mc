@@ -1,6 +1,7 @@
 import Toybox.WatchUi;
 import Toybox.Timer;
 import Toybox.Math;
+import Toybox.Attention;
 using Toybox.Application.Storage;
 using Toybox.Application.Properties;
 
@@ -34,7 +35,9 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
     var mHistorySize;
     var mCountHistory;
     var mParenCount;
+    var mUnaryPending;
     var mPercentPending;
+    var mVibrateOnTouch;
 
     // Financial var
     var mPresentValue;
@@ -73,6 +76,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
         mCalc = false;
         mDataChanged = false;
         mParenCount = 0;
+        mUnaryPending = false;
         mPercentPending = false;
         mFinancialMissingPV = false;
         mFinancialMissingFV = false;
@@ -90,9 +94,19 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
             mHistorySize = 10;
             Properties.setValue("historySize", mHistorySize);
         }
-
         if (mHistorySize == null) {
             mHistorySize = 10;
+        }
+
+        try {
+            mVibrateOnTouch = Properties.getValue("vibrateOnTouch");
+        }
+        catch (e) {
+            mVibrateOnTouch = false;
+            Properties.setValue("mVibrateOnTouch", false);
+        }
+        if (mVibrateOnTouch == null) {
+            mVibrateOnTouch = false;
         }
     }
 
@@ -149,7 +163,14 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
         System.println("");
         /*DEBUG*/
 
+        if (Attention has :vibrate && mVibrateOnTouch) {
+            var vibeData = [ new Attention.VibeProfile(25, 50) ]; // On for 50 ms at 25% duty cycle
+            Attention.vibrate(vibeData);
+        }
+
         if (gHilight > 0) {
+            var prefillResult;
+
             switch (gPanelOrder[gGrid - 1]) {
                 case 1:
                     gDataEntry = true; // Out flag to tell the display code NOT to limit the number of decimals
@@ -178,6 +199,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                     break;
 
                 case 2:
+                    gText = null;
+
                     switch (gHilight) {
                         case 1: // ParenOpen
                             // '(' must NOT be preceded by a 'number' (a string here)
@@ -220,6 +243,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             }
                             mOps_pos = 0;
                             mParenCount = 0;
+                            mUnaryPending = false;
                             mPercentPending = false;
                             gAnswer = null;
                             gError = null;
@@ -228,33 +252,34 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             break;
 
                         case 4: // Add
-                            // If we didn't type a number, use what's on the display for the first number
-                            if (/*mOps_pos == 0 &&*/ mOps[mOps_pos] == null) {
-                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                            if (prefillResult == 0) { // Invalid number entered
+                                break;
                             }
-                            // We currently have something in the input queue and that something is a 'number' (shown as a string)
-                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                if (mOps[mOps_pos].equals("-")) { // Can't be just a '-'
-                                    gError = WatchUi.loadResource(Rez.Strings.label_invalid);
-                                    break;
-                                }
+                            else if (prefillResult == 1) { // Valid number entered
                                 calcPrevious(Oper_Add);
                                 mOps_pos++;
                                 mOps[mOps_pos] = Oper_Add;
                                 mOps_pos++;
                                 mOps[mOps_pos] = null;
                             }
-                            // Not a number, must be an operation (other than open parenthesise), replace it with this
-                            else if (mOps_pos > 0 && mOps[mOps_pos - 1] != Oper_ParenOpen) {
+                            else if (prefillResult == 2) { // Not a number, must be an operation (other than open parenthesise), replace it with this
                                 mOps[mOps_pos - 1] = Oper_Add;
                             }
                             gOpText = "+";
                             break;
 
                         case 5: // Substract (or negative number)
-                            // If we didn't type a number, use what's on the display for the first number
-                            if (/*mOps_pos == 0 &&*/ mOps[mOps_pos] == null) {
-                                mOps[mOps_pos] = gAnswer; // Different from the other here to accomodate for the leading '-'
+                            // If we didn't type a number, use what's on the display
+                            if (mOps[mOps_pos] == null) {
+                                if (mOps_pos > 0 && mOps[mOps_pos - 1] instanceof Lang.Number) { // But not if the previous item in our stack is an operation. If so, assume we want to enter a negative numner
+                                    gAnswer = "-";
+                                    mOps[mOps_pos] = gAnswer;
+                                    break;
+                                }
+                                else {
+                                    mOps[mOps_pos] = gAnswer;
+                                }
                             }
                             // We currently have something in the input queue
                             if (mOps[mOps_pos] != null) {
@@ -297,87 +322,70 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             break;
 
                         case 7: // Multiply
-                            // If we didn't type a number, use what's on the display for the first number
-                            if (/*mOps_pos == 0 &&*/ mOps[mOps_pos] == null) {
-                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                            if (prefillResult == 0) { // Invalid number entered
+                                break;
                             }
-                            // We currently have something in the input queue and that something is a 'number' (shown as a string)
-                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                if (mOps[mOps_pos].equals("-")) { // Can't be just a '-'
-                                    gError = WatchUi.loadResource(Rez.Strings.label_invalid);
-                                    break;
-                                }
+                            else if (prefillResult == 1) { // Valid number entered
                                 calcPrevious(Oper_Multiply);
                                 mOps_pos++;
                                 mOps[mOps_pos] = Oper_Multiply;
                                 mOps_pos++;
                                 mOps[mOps_pos] = null;
                             }
-                            // Not a number, must be an operation (other than open parenthesise), replace it with this
-                            else if (mOps_pos > 0 && mOps[mOps_pos - 1] != Oper_ParenOpen) {
+                            else if (prefillResult == 2) { // Not a number, must be an operation (other than open parenthesise), replace it with this
                                 mOps[mOps_pos - 1] = Oper_Multiply;
                             }
-                            gOpText = "*";
+                            gOpText = "×";
                             break;
 
                         case 8: // Divide
-                            // If we didn't type a number, use what's on the display for the first number
-                            if (/*mOps_pos == 0 &&*/ mOps[mOps_pos] == null) {
-                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                            if (prefillResult == 0) { // Invalid number entered
+                                break;
                             }
-                            // We currently have something in the input queue and that something is a 'number' (shown as a string)
-                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                if (mOps[mOps_pos].equals("-")) { // Can't be just a '-'
-                                    gError = WatchUi.loadResource(Rez.Strings.label_invalid);
-                                    break;
-                                }
+                            else if (prefillResult == 1) { // Valid number entered
                                 calcPrevious(Oper_Divide);
                                 mOps_pos++;
                                 mOps[mOps_pos] = Oper_Divide;
                                 mOps_pos++;
                                 mOps[mOps_pos] = null;
                             }
-                            // Not a number, must be an operation (other than open parenthesise), replace it with this
-                            else if (mOps_pos > 0 && mOps[mOps_pos - 1] != Oper_ParenOpen) {
+                            else if (prefillResult == 2) { // Not a number, must be an operation (other than open parenthesise), replace it with this
                                 mOps[mOps_pos - 1] = Oper_Divide;
                             }
                             gOpText = "÷";
                             break;
 
                         case 9: // Percent
-                            // If we didn't type a number, use what's on the display for the first number
-                            if (/*mOps_pos == 0 &&*/ mOps[mOps_pos] == null) {
-                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                            if (prefillResult == 0) { // Invalid number entered
+                                break;
                             }
-                            // We currently have something in the input queue and that something is a 'number' (shown as a string)
-                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                if (mOps[mOps_pos].equals("-")) { // Can't be just a '-'
+                            else if (prefillResult == 1) { // Valid number entered
+                                var double = getDouble(mOps[mOps_pos]);
+                                if (double == null) {
                                     gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                                     break;
                                 }
 
-                                var float = getNumber(mOps[mOps_pos]);
-                                if (float == null) {
-                                    gError = WatchUi.loadResource(Rez.Strings.label_invalid);
-                                    break;
-                                }
-
-                                gAnswer = stripTrailingZeros(float / 100.0);
+                                gAnswer = stripTrailingZeros(double / 100.0d);
                                 mOps[mOps_pos] = null;
 
                                 if (mOps_pos > 1 && mOps[mOps_pos - 2] instanceof Lang.String && mOps[mOps_pos - 1] instanceof Lang.Number && (mOps[mOps_pos - 1] == Oper_Add || mOps[mOps_pos - 1] == Oper_Substract)) {
                                     // Percentage operation with an addition or substraction just before
-                                    var left = getNumber(mOps[mOps_pos - 2]);
+                                    var left = getDouble(mOps[mOps_pos - 2]);
                                     if (left == null) {
                                         gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                                         break;
                                     }
 
-                                    gAnswer = stripTrailingZeros(left * float / 100.0);
+                                    gAnswer = stripTrailingZeros(left * double / 100.0d);
                                     mOps[mOps_pos] = null;
-                                    mPercentPending = true;
                                 }
-                           }
+                                mUnaryPending = true;
+                                mPercentPending = true;
+                            }
                             gOpText = "%";
                             break;
 
@@ -385,25 +393,36 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (mOps[mOps_pos] == null) {
                                 mOps[mOps_pos] = gAnswer;
                             }
-                            if (mOps[mOps_pos] != null) {
-                                gAnswer = stripTrailingZeros(mOps[mOps_pos]);
-                                if (gAnswer.toFloat() != 0.0) {
-                                    gMemory = gAnswer;
-                                    Storage.setValue("Memory", gMemory);
-                                }
-                                // Storing 0 is like erasing it
-                                else {
-                                    gMemory = null;
-                                    Storage.deleteValue("Memory");
-                                }
-                                mOps[mOps_pos] = null;
+                            if (mOps[mOps_pos] == null) {
+                                mOps[mOps_pos] = "0.";
                             }
+
+                            gAnswer = stripTrailingZeros(mOps[mOps_pos]);
+                            var double = gAnswer.toDouble();
+                            if (double != 0.0d) {
+                                // Empty? Stock it
+                                if (gMemory == null) {
+                                    gMemory = gAnswer;
+                                }
+                                // Otherwise add to it
+                                else {
+                                    gMemory = stripTrailingZeros(gMemory.toDouble() + double);
+                                }
+                                Storage.setValue("Memory", gMemory);
+                            }
+                            // Storing 0 is like erasing it
+                            else {
+                                gMemory = null;
+                                Storage.deleteValue("Memory");
+                            }
+                            mOps[mOps_pos] = null;
 
                             break;
 
                         case 11: // MR
                             if (gMemory != null) {
                                 gAnswer = gMemory;
+                                mUnaryPending = true;
                                 mOps[mOps_pos] = null;
                             }
                             break;
@@ -411,10 +430,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                     break;
 
                 case 3:
-                    if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String && mOps[mOps_pos].equals("-")) {
-                        gError = WatchUi.loadResource(Rez.Strings.label_invalid);
-                        break;
-                    }
+                    gText = null;
+
                     switch (gHilight) {
                         case 1: // INV
                             gInvActive = !gInvActive;
@@ -426,63 +443,63 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
                         case 3: // Pi
                             gAnswer = stripTrailingZeros(Math.PI);
+                            mUnaryPending = true;
                             mOps[mOps_pos] = gAnswer;
                             break;
 
                         case 4: // SIN
                         case 5: // COSIN
                         case 6: // TANGEANT
-                            // If we didn't type a number, use what's on the display for the first number
-                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
-                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                            if (prefillResult == 0) { // Invalid number entered
+                                break;
                             }
-                            // We currently have something in the input queue and that something is a 'number' (shown as a string)
-                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                if (mOps[mOps_pos].equals("-")) {
-                                    gError = WatchUi.loadResource(Rez.Strings.label_invalid);
-                                    break;
-                                }
-                                var float = mOps[mOps_pos].toFloat();
+                            else if (prefillResult == 1) { // Valid number entered
+                                var double = mOps[mOps_pos].toDouble();
                                 try {
                                     if (gInvActive) {
                                         var rad;
                                         switch (gHilight) {
                                             case 4:
-                                                rad = Math.asin(float);
+                                                rad = Math.asin(double);
                                                 break;
                                             case 5:
-                                                rad = Math.acos(float);
+                                                rad = Math.acos(double);
                                                 break;
                                             case 6:
-                                                rad = Math.atan(float);
+                                                rad = Math.atan(double);
                                                 break;
                                         }
                                         if (isFinite(rad) == false) {
                                             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                                         }
+                                        else {
+                                            gAnswer = stripTrailingZeros(gDegRad == Degree ? Math.toDegrees(rad) : rad);
+                                            mUnaryPending = true;
+                                        }
 
-                                        gAnswer = stripTrailingZeros(gDegRad == Degree ? Math.toDegrees(rad) : rad);
                                         mOps[mOps_pos] = null;
                                     }
                                     else {
-                                        var rad = (gDegRad == Degree ? Math.toRadians(float) : float);
+                                        var rad = (gDegRad == Degree ? Math.toRadians(double) : double);
                                         switch (gHilight) {
                                             case 4:
-                                                float = Math.sin(rad);
+                                                double = Math.sin(rad);
                                                 break;
                                             case 5:
-                                                float = Math.cos(rad);
+                                                double = Math.cos(rad);
                                                 break;
                                             case 6:
-                                                float = Math.tan(rad);
+                                                double = Math.tan(rad);
                                                 break;
                                         }
 
-                                        if (isFinite(float) == false) {
+                                        if (isFinite(double) == false) {
                                             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                                         }
                                         else {
-                                            gAnswer = stripTrailingZeros(float);
+                                            gAnswer = stripTrailingZeros(double);
+                                            mUnaryPending = true;
                                         }
 
                                         mOps[mOps_pos] = null;
@@ -499,36 +516,36 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
                         case 7: // Log
                         case 8: // Ln
-                            // If we didn't type a number, use what's on the display for the first number
-                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
-                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                            if (prefillResult == 0) { // Invalid number entered
+                                break;
                             }
-                            // We currently have something in the input queue and that something is a 'number' (shown as a string)
-                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                var float = mOps[mOps_pos].toFloat();
+                            else if (prefillResult == 1) { // Valid number entered
+                                var double = mOps[mOps_pos].toDouble();
                                 try {
                                     if (gInvActive) {
                                         if (gHilight == 7) {
-                                            float = Math.pow(10, float);
+                                            double = Math.pow(10, double);
                                         }
                                         else {
-                                            float = Math.pow(2.718281828, float);
+                                            double = Math.pow(2.718281828d, double);
                                         }
                                     }
                                     else {
                                         if (gHilight == 7) {
-                                            float = Math.log(float, 10);
+                                            double = Math.log(double, 10);
                                         }
                                         else {
-                                            float = Math.ln(float);
+                                            double = Math.ln(double);
                                         }
                                     }
 
-                                    if (isFinite(float) == false) {
+                                    if (isFinite(double) == false) {
                                         gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                                     }
                                     else {
-                                        gAnswer = stripTrailingZeros(float);
+                                        gAnswer = stripTrailingZeros(double);
+                                        mUnaryPending = true;
                                     }
 
                                     mOps[mOps_pos] = null;
@@ -543,15 +560,15 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             break;
 
                         case 9: // 1/x
-                            // If we didn't type a number, use what's on the display for the first number
-                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
-                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                            if (prefillResult == 0) { // Invalid number entered
+                                break;
                             }
-                            // We currently have something in the input queue and that something is a 'number' (shown as a string)
-                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                var float = mOps[mOps_pos].toFloat();
-                                if (float != 0.0) {
-                                    gAnswer = stripTrailingZeros(1.0 / float);
+                            else if (prefillResult == 1) { // Valid number entered
+                                var double = mOps[mOps_pos].toDouble();
+                                if (double != 0.0d) {
+                                    gAnswer = stripTrailingZeros(1.0d / double);
+                                    mUnaryPending = true;
                                     mOps[mOps_pos] = null;
                                 }
                                 else {
@@ -564,26 +581,26 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             break;
 
                         case 10: // x^2
-                            // If we didn't type a number, use what's on the display for the first number
-                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
-                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                            if (prefillResult == 0) { // Invalid number entered
+                                break;
                             }
-                            // We currently have something in the input queue and that something is a 'number' (shown as a string)
-                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                var float = mOps[mOps_pos].toFloat();
+                            else if (prefillResult == 1) { // Valid number entered
+                                var double = mOps[mOps_pos].toDouble();
                                 try {
                                     if (gInvActive) {
-                                        float = Math.sqrt(float);
+                                        double = Math.sqrt(double);
                                     }
                                     else {
-                                        float *= float;
+                                        double *= double;
                                     }
 
-                                    if (isFinite(float) == false) {
+                                    if (isFinite(double) == false) {
                                         gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                                     }
                                     else {
-                                        gAnswer = stripTrailingZeros(float);
+                                        gAnswer = stripTrailingZeros(double);
+                                        mUnaryPending = true;
                                     }
 
                                     mOps[mOps_pos] = null;
@@ -598,23 +615,22 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             break;
 
                         case 11: // x^y
-                            // If we didn't type a number, use what's on the display for the first number
-                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
-                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                            if (prefillResult == 0) { // Invalid number entered
+                                break;
                             }
-                            // We currently have something in the input queue and that something is a 'number' (shown as a string)
-                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
+                            else if (prefillResult == 1) { // Valid number entered
                                 calcPrevious(Oper_Exponent);
                                 mOps_pos++;
                                 mOps[mOps_pos] = Oper_Exponent;
                                 mOps_pos++;
                                 mOps[mOps_pos] = null;
                             }
-                            // Not a number, must be an operation (other than open parenthesise), replace it with this
-                            else if (mOps_pos > 0 && mOps[mOps_pos - 1] != Oper_ParenOpen) {
+                            else if (prefillResult == 2) { // Not a number, must be an operation (other than open parenthesise), replace it with this
                                 mOps[mOps_pos - 1] = Oper_Exponent;
                             }
 
+                            gOpText = "^";
                             gInvActive = false;
 
                             break;
@@ -623,10 +639,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                     break;
 
                 case 4:
-                    if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String && mOps[mOps_pos].equals("-")) {
-                        gError = WatchUi.loadResource(Rez.Strings.label_invalid);
-                        break;
-                    }
+                    gText = null;
+
                     switch (gHilight) {
                         case 1: // INV
                             gInvActive = !gInvActive;
@@ -637,23 +651,23 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             break;
 
                         case 3: // F->C
-                            // If we didn't type a number, use what's on the display for the first number
-                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
-                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                            if (prefillResult == 0) { // Invalid number entered
+                                break;
                             }
-                            // We currently have something in the input queue and that something is a 'number' (shown as a string)
-                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                var float = mOps[mOps_pos].toFloat();
+                            else if (prefillResult == 1) { // Valid number entered
+                                var double = mOps[mOps_pos].toDouble();
                                 if (gInvActive) {
-                                    float = float * 9.0 / 5.0;
-                                    float += 32.0;
-                                    gAnswer = stripTrailingZeros(float);
+                                    double = double * 9.0d / 5.0d;
+                                    double += 32.0d;
+                                    gAnswer = stripTrailingZeros(double);
                                 }
                                 else {
-                                    float -= 32.0;
-                                    float = float * 5.0 / 9.0;
-                                    gAnswer = stripTrailingZeros(float);
+                                    double -= 32.0d;
+                                    double = double * 5.0d / 9.0d;
+                                    gAnswer = stripTrailingZeros(double);
                                 }
+                                mUnaryPending = true;
                                 mOps[mOps_pos] = null;
                             }
 
@@ -661,20 +675,20 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             break;
 
                         case 4: // GAL/LITRE
-                            // If we didn't type a number, use what's on the display for the first number
-                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
-                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                            if (prefillResult == 0) { // Invalid number entered
+                                break;
                             }
-                            // We currently have something in the input queue and that something is a 'number' (shown as a string)
-                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                var float = mOps[mOps_pos].toFloat();
-                                var convUnit = (gConvUnit == Imperial ? 4.54609 : 3.78541);
+                            else if (prefillResult == 1) { // Valid number entered
+                                var double = mOps[mOps_pos].toDouble();
+                                var convUnit = (gConvUnit == Imperial ? 4.54609d : 3.78541d);
                                 if (gInvActive) {
-                                    gAnswer = stripTrailingZeros(float / convUnit);
+                                    gAnswer = stripTrailingZeros(double / convUnit);
                                 }
                                 else {
-                                    gAnswer = stripTrailingZeros(float * convUnit);
+                                    gAnswer = stripTrailingZeros(double * convUnit);
                                 }
+                                mUnaryPending = true;
                                 mOps[mOps_pos] = null;
                             }
 
@@ -682,19 +696,19 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             break;
 
                         case 5: // OZ/ML
-                            // If we didn't type a number, use what's on the display for the first number
-                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
-                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                            if (prefillResult == 0) { // Invalid number entered
+                                break;
                             }
-                            // We currently have something in the input queue and that something is a 'number' (shown as a string)
-                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                var float = mOps[mOps_pos].toFloat();
+                            else if (prefillResult == 1) { // Valid number entered
+                                var double = mOps[mOps_pos].toDouble();
                                 if (gInvActive) {
-                                    gAnswer = stripTrailingZeros(float / 29.5735);
+                                    gAnswer = stripTrailingZeros(double / 29.5735d);
                                 }
                                 else {
-                                    gAnswer = stripTrailingZeros(float * 29.5735);
+                                    gAnswer = stripTrailingZeros(double * 29.5735d);
                                 }
+                                mUnaryPending = true;
                                 mOps[mOps_pos] = null;
                             }
 
@@ -702,20 +716,20 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             break;
 
                         case 6: // CUP/ML
-                            // If we didn't type a number, use what's on the display for the first number
-                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
-                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                            if (prefillResult == 0) { // Invalid number entered
+                                break;
                             }
-                            // We currently have something in the input queue and that something is a 'number' (shown as a string)
-                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                var float = mOps[mOps_pos].toFloat();
-                                var convUnit = (gConvUnit == Imperial ? 284.131 : 240);
+                            else if (prefillResult == 1) { // Valid number entered
+                                var double = mOps[mOps_pos].toDouble();
+                                var convUnit = (gConvUnit == Imperial ? 284.131d : 240.0d);
                                 if (gInvActive) {
-                                    gAnswer = stripTrailingZeros(float / convUnit);
+                                    gAnswer = stripTrailingZeros(double / convUnit);
                                 }
                                 else {
-                                    gAnswer = stripTrailingZeros(float * convUnit);
+                                    gAnswer = stripTrailingZeros(double * convUnit);
                                 }
+                                mUnaryPending = true;
                                 mOps[mOps_pos] = null;
                             }
 
@@ -723,19 +737,19 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             break;
 
                         case 7: // MILE/KM
-                            // If we didn't type a number, use what's on the display for the first number
-                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
-                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                            if (prefillResult == 0) { // Invalid number entered
+                                break;
                             }
-                            // We currently have something in the input queue and that something is a 'number' (shown as a string)
-                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                var float = mOps[mOps_pos].toFloat();
+                            else if (prefillResult == 1) { // Valid number entered
+                                var double = mOps[mOps_pos].toDouble();
                                 if (gInvActive) {
-                                    gAnswer = stripTrailingZeros(float / 1.60934);
+                                    gAnswer = stripTrailingZeros(double / 1.60934d);
                                 }
                                 else {
-                                    gAnswer = stripTrailingZeros(float * 1.60934);
+                                    gAnswer = stripTrailingZeros(double * 1.60934d);
                                 }
+                                mUnaryPending = true;
                                 mOps[mOps_pos] = null;
                             }
 
@@ -743,19 +757,19 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             break;
 
                         case 8: // FT/CM
-                            // If we didn't type a number, use what's on the display for the first number
-                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
-                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                            if (prefillResult == 0) { // Invalid number entered
+                                break;
                             }
-                            // We currently have something in the input queue and that something is a 'number' (shown as a string)
-                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                var float = mOps[mOps_pos].toFloat();
+                            else if (prefillResult == 1) { // Valid number entered
+                                var double = mOps[mOps_pos].toDouble();
                                 if (gInvActive) {
-                                    gAnswer = stripTrailingZeros(float / 30.48);
+                                    gAnswer = stripTrailingZeros(double / 30.48d);
                                 }
                                 else {
-                                    gAnswer = stripTrailingZeros(float * 30.48);
+                                    gAnswer = stripTrailingZeros(double * 30.48d);
                                 }
+                                mUnaryPending = true;
                                 mOps[mOps_pos] = null;
                             }
 
@@ -763,19 +777,19 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             break;
 
                         case 9: // LB/KG
-                            // If we didn't type a number, use what's on the display for the first number
-                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
-                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                            if (prefillResult == 0) { // Invalid number entered
+                                break;
                             }
-                            // We currently have something in the input queue and that something is a 'number' (shown as a string)
-                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                var float = mOps[mOps_pos].toFloat();
+                            else if (prefillResult == 1) { // Valid number entered
+                                var double = mOps[mOps_pos].toDouble();
                                 if (gInvActive) {
-                                    gAnswer = stripTrailingZeros(float / 0.453592);
+                                    gAnswer = stripTrailingZeros(double / 0.453592d);
                                 }
                                 else {
-                                    gAnswer = stripTrailingZeros(float * 0.453592);
+                                    gAnswer = stripTrailingZeros(double * 0.453592d);
                                 }
+                                mUnaryPending = true;
                                 mOps[mOps_pos] = null;
                             }
 
@@ -783,19 +797,19 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             break;
 
                         case 10: // MPH/KMH
-                            // If we didn't type a number, use what's on the display for the first number
-                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
-                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                            if (prefillResult == 0) { // Invalid number entered
+                                break;
                             }
-                            // We currently have something in the input queue and that something is a 'number' (shown as a string)
-                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                var float = mOps[mOps_pos].toFloat();
+                            else if (prefillResult == 1) { // Valid number entered
+                                var double = mOps[mOps_pos].toDouble();
                                 if (gInvActive) {
-                                    gAnswer = stripTrailingZeros(float / 1.60934);
+                                    gAnswer = stripTrailingZeros(double / 1.60934d);
                                 }
                                 else {
-                                    gAnswer = stripTrailingZeros(float * 1.60934);
+                                    gAnswer = stripTrailingZeros(double * 1.60934d);
                                 }
+                                mUnaryPending = true;
                                 mOps[mOps_pos] = null;
                             }
 
@@ -803,19 +817,19 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             break;
 
                         case 11: // ACRE/M2
-                            // If we didn't type a number, use what's on the display for the first number
-                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
-                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                            if (prefillResult == 0) { // Invalid number entered
+                                break;
                             }
-                            // We currently have something in the input queue and that something is a 'number' (shown as a string)
-                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                var float = mOps[mOps_pos].toFloat();
+                            else if (prefillResult == 1) { // Valid number entered
+                                var double = mOps[mOps_pos].toDouble();
                                 if (gInvActive) {
-                                    gAnswer = stripTrailingZeros(float / 4046.86);
+                                    gAnswer = stripTrailingZeros(double / 4046.86d);
                                 }
                                 else {
-                                    gAnswer = stripTrailingZeros(float * 4046.86);
+                                    gAnswer = stripTrailingZeros(double * 4046.86d);
                                 }
+                                mUnaryPending = true;
                                 mOps[mOps_pos] = null;
                             }
 
@@ -825,10 +839,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                     break;
                 case 5:
                     gText = null;
-                    if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String && mOps[mOps_pos].equals("-")) {
-                        gError = WatchUi.loadResource(Rez.Strings.label_invalid);
-                        break;
-                    }
+
                     switch (gHilight) {
                         case 1: // Fut.V/Loan
                             gFinancialMode = (gFinancialMode == FutureValue ? Loan : FutureValue);
@@ -845,22 +856,24 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (mRecall) {
                                 gAnswer = stripTrailingZeros(mPresentValue);
                                 mRecall = false;
+                                mUnaryPending = true;
+                                mOps[mOps_pos] = null;
                                 break;
                             }
                             if (mCalc) {
                                 calcFinancial(gHilight);
                                 break;
                             }
-                            // If we didn't type a number, use what's on the display for the first number
-                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
-                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            // If we didn't type a number, use what's on the display
+                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                            if (prefillResult == 0) { // Invalid number entered
+                                break;
                             }
-                            // We currently have something in the input queue and that something is a 'number' (shown as a string), use that
-                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                gAnswer = stripTrailingZeros(mOps[mOps_pos].toFloat());
+                            else if (prefillResult == 1) { // Valid number entered
+                                gAnswer = stripTrailingZeros(mOps[mOps_pos].toDouble());
                             }
-                            mPresentValue = gAnswer.toFloat();
-                            if (mPresentValue == 0.0) {
+                            mPresentValue = gAnswer.toDouble();
+                            if (mPresentValue == 0.0d) {
                                 mPresentValue = null;
                             }
                             mOps[mOps_pos] = null;
@@ -871,22 +884,23 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (mRecall) {
                                 gAnswer = stripTrailingZeros(mFutureValue);
                                 mRecall = false;
+                                mUnaryPending = true;
+                                mOps[mOps_pos] = null;
                                 break;
                             }
                             if (mCalc) {
                                 calcFinancial(gHilight);
                                 break;
                             }
-                            // If we didn't type a number, use what's on the display for the first number
-                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
-                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                            if (prefillResult == 0) { // Invalid number entered
+                                break;
                             }
-                            // We currently have something in the input queue and that something is a 'number' (shown as a string), use that
-                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                gAnswer = stripTrailingZeros(mOps[mOps_pos].toFloat());
+                            else if (prefillResult == 1) { // Valid number entered
+                                gAnswer = stripTrailingZeros(mOps[mOps_pos].toDouble());
                             }
-                            mFutureValue = gAnswer.toFloat();
-                            if (mFutureValue == 0.0) {
+                            mFutureValue = gAnswer.toDouble();
+                            if (mFutureValue == 0.0d) {
                                 mFutureValue = null;
                             }
                             mOps[mOps_pos] = null;
@@ -896,22 +910,23 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (mRecall) {
                                 gAnswer = stripTrailingZeros(mPayment);
                                 mRecall = false;
+                                mUnaryPending = true;
+                                mOps[mOps_pos] = null;
                                 break;
                             }
                             if (mCalc) {
                                 calcFinancial(gHilight);
                                 break;
                             }
-                            // If we didn't type a number, use what's on the display for the first number
-                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
-                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                            if (prefillResult == 0) { // Invalid number entered
+                                break;
                             }
-                            // We currently have something in the input queue and that something is a 'number' (shown as a string), use that
-                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                gAnswer = stripTrailingZeros(mOps[mOps_pos].toFloat());
+                            else if (prefillResult == 1) { // Valid number entered
+                                gAnswer = stripTrailingZeros(mOps[mOps_pos].toDouble());
                             }
-                            mPayment = gAnswer.toFloat();
-                            if (mPayment == 0.0) {
+                            mPayment = gAnswer.toDouble();
+                            if (mPayment == 0.0d) {
                                 mPayment = null;
                             }
                             mOps[mOps_pos] = null;
@@ -921,22 +936,23 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (mRecall) {
                                 gAnswer = stripTrailingZeros(mYears);
                                 mRecall = false;
+                                mUnaryPending = true;
+                                mOps[mOps_pos] = null;
                                 break;
                             }
                             if (mCalc) {
                                 calcFinancial(gHilight);
                                 break;
                             }
-                            // If we didn't type a number, use what's on the display for the first number
-                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
-                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                            if (prefillResult == 0) { // Invalid number entered
+                                break;
                             }
-                            // We currently have something in the input queue and that something is a 'number' (shown as a string), use that
-                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                gAnswer = stripTrailingZeros(mOps[mOps_pos].toFloat());
+                            else if (prefillResult == 1) { // Valid number entered
+                                gAnswer = stripTrailingZeros(mOps[mOps_pos].toDouble());
                             }
-                            mYears = gAnswer.toFloat();
-                            if (mYears == 0.0) {
+                            mYears = gAnswer.toDouble();
+                            if (mYears == 0.0d) {
                                 mYears = null;
                             }
                             mOps[mOps_pos] = null;
@@ -945,8 +961,13 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         case 8: // I/Y
                             if (mRecall) {
                                 if (mInterestPerYear != null) {
-                                    gAnswer = stripTrailingZeros(mInterestPerYear * 100.0);
+                                    gAnswer = stripTrailingZeros(mInterestPerYear * 100.0d);
                                 }
+                                else {
+                                    gAnswer = "0.";
+                                    mOps[mOps_pos] = null;
+                                }
+                                mUnaryPending = true;
                                 mRecall = false;
                                 break;
                             }
@@ -954,16 +975,15 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 calcFinancial(gHilight);
                                 break;
                             }
-                            // If we didn't type a number, use what's on the display for the first number
-                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
-                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                            if (prefillResult == 0) { // Invalid number entered
+                                break;
                             }
-                            // We currently have something in the input queue and that something is a 'number' (shown as a string), use that
-                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                gAnswer = stripTrailingZeros(mOps[mOps_pos].toFloat());
+                            else if (prefillResult == 1) { // Valid number entered
+                                gAnswer = stripTrailingZeros(mOps[mOps_pos].toDouble());
                             }
-                            mInterestPerYear = gAnswer.toFloat() / 100.0;
-                            if (mInterestPerYear == 0.0) {
+                            mInterestPerYear = gAnswer.toDouble() / 100.0d;
+                            if (mInterestPerYear == 0.0d) {
                                 mInterestPerYear = null;
                             }
                             mOps[mOps_pos] = null;
@@ -973,22 +993,23 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (mRecall) {
                                 gAnswer = stripTrailingZeros(mPeriodsPerYear);
                                 mRecall = false;
+                                mUnaryPending = true;
+                                mOps[mOps_pos] = null;
                                 break;
                             }
                             if (mCalc) {
                                 calcFinancial(gHilight);
                                 break;
                             }
-                            // If we didn't type a number, use what's on the display for the first number
-                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
-                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                            if (prefillResult == 0) { // Invalid number entered
+                                break;
                             }
-                            // We currently have something in the input queue and that something is a 'number' (shown as a string), use that
-                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                gAnswer = stripTrailingZeros(mOps[mOps_pos].toFloat());
+                            else if (prefillResult == 1) { // Valid number entered
+                                gAnswer = stripTrailingZeros(mOps[mOps_pos].toDouble());
                             }
-                            mPeriodsPerYear = gAnswer.toFloat();
-                            if (mPeriodsPerYear == 0.0) {
+                            mPeriodsPerYear = gAnswer.toDouble();
+                            if (mPeriodsPerYear == 0.0d) {
                                 mPeriodsPerYear = null;
                             }
                             mOps[mOps_pos] = null;
@@ -1014,14 +1035,11 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                     if (gHilight != 9 && gHilight != 11) {
                         gDataReset = false;
                     }
-                    if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String && mOps[mOps_pos].equals("-")) {
-                        gError = WatchUi.loadResource(Rez.Strings.label_invalid);
-                        break;
-                    }
                     switch (gHilight) {
                         case 1: // MEAN
                             if (gDataCount > 0) {
                                 gAnswer = stripTrailingZeros(gDataMean);
+                                mUnaryPending = true;
                                 gText = "MEAN=";
                             }
                             else {
@@ -1041,6 +1059,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 ssdev = ssdev / (gDataCount - 1);
                                 ssdev = Math.sqrt(ssdev);
                                 gAnswer = stripTrailingZeros(ssdev);
+                                mUnaryPending = true;
                                 gText = "SSDEV=";
                             }
                             else {
@@ -1060,6 +1079,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 psdev = psdev / gDataCount;
                                 psdev = Math.sqrt(psdev);
                                 gAnswer = stripTrailingZeros(psdev);
+                                mUnaryPending = true;
                                 gText = "PSDEV=";
                             }
                             else {
@@ -1084,7 +1104,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 }
                                 
                                 gAnswer = stripTrailingZeros(median);
-
+                                mUnaryPending = true;
                                 gText = "MEDIAN=";
                             }
                             else {
@@ -1103,6 +1123,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 }
                                 variance = variance / gDataCount;
                                 gAnswer = stripTrailingZeros(variance);
+                                mUnaryPending = true;
                                 gText = "VARIANCE=";
                             }
                             else {
@@ -1138,6 +1159,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     }
                                 }                                
                                 gAnswer = stripTrailingZeros(highestValue);
+                                mUnaryPending = true;
                                 gText = "MODE=";
                             }
                             else {
@@ -1155,6 +1177,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 }
                                 
                                 gAnswer = stripTrailingZeros(mDataPointsSorted[gDataCount - 1] - mDataPointsSorted[0]);
+                                mUnaryPending = true;
                                 gText = "RANGE=";
                             }
                             else {
@@ -1168,6 +1191,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 gDataView = !gDataView;
                                 if (gDataView) {
                                     gAnswer = stripTrailingZeros(gDataPoints[0]);
+                                    mUnaryPending = true;
                                     gDataViewPos = 0;
                                 }
                             }
@@ -1181,13 +1205,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             break;
 
                         case 10: // Add
-                            // If we didn't type a number, use what's on the display for the first number
-                            if (mOps_pos == 0 && mOps[mOps_pos] == null) {
-                                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                            if (prefillResult == 0) { // Invalid number entered
+                                break;
                             }
-                            // We currently have something in the input queue and that something is a 'number' (shown as a string), use that
-                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                gAnswer = stripTrailingZeros(mOps[mOps_pos].toFloat());
+                            else if (prefillResult == 1) { // Valid number entered
+                                gAnswer = stripTrailingZeros(mOps[mOps_pos].toDouble());
                             }
 
                             if (gAnswer == null) {
@@ -1198,12 +1221,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             mDataChanged = true;
 
                             gDataCount++;
-                            gDataSum += gAnswer.toFloat();
+                            gDataSum += gAnswer.toDouble();
                             gDataMean =  gDataSum / gDataCount;
                             if (gDataPoints == null) {
                                 gDataPoints = [];
                             }                        
-                            gDataPoints.add(gAnswer.toFloat());
+                            gDataPoints.add(gAnswer.toDouble());
 
                             gText = "N=" + gDataCount;
 
@@ -1225,20 +1248,19 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 gText = "N=0";
                             }
                             else {
-                                // If we didn't type a number, use what's on the display for the first number
-                                if (mOps_pos == 0 && mOps[mOps_pos] == null) {
-                                    mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+                                prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                                if (prefillResult == 0) { // Invalid number entered
+                                    break;
                                 }
-                                // We currently have something in the input queue and that something is a 'number' (shown as a string), use that
-                                if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                    gAnswer = stripTrailingZeros(mOps[mOps_pos].toFloat());
+                                else if (prefillResult == 1) { // Valid number entered
+                                    gAnswer = stripTrailingZeros(mOps[mOps_pos].toDouble());
                                 }
 
-                                if (gDataPoints != null && gDataPoints.indexOf(gAnswer.toFloat()) != -1) {
-                                    gDataPoints.remove(gAnswer.toFloat());
+                                if (gDataPoints != null && gDataPoints.indexOf(gAnswer.toDouble()) != -1) {
+                                    gDataPoints.remove(gAnswer.toDouble());
                                     gDataCount--;
                                     if (gDataCount > 0) {
-                                        gDataSum -= gAnswer.toFloat();
+                                        gDataSum -= gAnswer.toDouble();
                                         gDataMean = gDataSum / gDataCount;
                                     }
                                     else {
@@ -1304,6 +1326,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                 gCurrentHistoryIncIndex = null;
 
                 mParenCount = 0;
+                mUnaryPending = false;
                 mPercentPending = false;
                 mOps_pos = 0;
                 mOps[mOps_pos] = null;
@@ -1349,7 +1372,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
         gDataPoints = Storage.getValue("DataPoints");
         if (gDataPoints != null) {
             gDataCount = gDataPoints.size();
-            gDataMean = 0.0;
+            gDataMean = 0.0d;
             if (gDataCount > 0) {
                 for (var i = 0; i < gDataCount; i++) {
                     gDataMean += gDataPoints[i];
@@ -1360,7 +1383,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function calcFinancial(which) {
-        var float;
+        var double;
         var futureValue;
         var missing = false;
 
@@ -1383,7 +1406,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             mFinancialMissingIY = true;
                             missing = true;
                         }
-                        if (mPeriodsPerYear == null || mPeriodsPerYear == 0.0) {
+                        if (mPeriodsPerYear == null || mPeriodsPerYear == 0.0d) {
                             mFinancialMissingPY = true;
                             missing = true;
                         }
@@ -1395,23 +1418,23 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         try {
                             futureValue = mFutureValue;
                             if (mPayment != null) {
-                                float = mPayment * (Math.pow(1.0 + mInterestPerYear / mPeriodsPerYear, mYears * mPeriodsPerYear) - 1.0) / (mInterestPerYear / mPeriodsPerYear) * (gFinancialBeginEnd == End ? 1 : (1.0 + mInterestPerYear / mPeriodsPerYear)); // Recurrent deposit
-                                futureValue -= float; 
+                                double = mPayment * (Math.pow(1.0d + mInterestPerYear / mPeriodsPerYear, mYears * mPeriodsPerYear) - 1.0d) / (mInterestPerYear / mPeriodsPerYear) * (gFinancialBeginEnd == End ? 1 : (1.0d + mInterestPerYear / mPeriodsPerYear)); // Recurrent deposit
+                                futureValue -= double; 
 
                             }
-                            float = futureValue / Math.pow((1.0 + mInterestPerYear / mPeriodsPerYear), mYears * mPeriodsPerYear); // From future value
+                            double = futureValue / Math.pow((1.0d + mInterestPerYear / mPeriodsPerYear), mYears * mPeriodsPerYear); // From future value
                         }
                         catch (e) {
                             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                             break;
                         }
 
-                        if (!isFinite(float)) {
+                        if (!isFinite(double)) {
                             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                         }
                         else {
-                            gAnswer = stripTrailingZeros(float);
-                            mPresentValue =  (float == 0.0 ? null : float);
+                            gAnswer = stripTrailingZeros(double);
+                            mPresentValue =  (double == 0.0d ? null : double);
                         }
                         break;
 
@@ -1429,7 +1452,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             mFinancialMissingIY = true;
                             missing = true;
                         }
-                        if (mPeriodsPerYear == null || mPeriodsPerYear == 0.0) {
+                        if (mPeriodsPerYear == null || mPeriodsPerYear == 0.0d) {
                             mFinancialMissingPY = true;
                             missing = true;
                         }
@@ -1439,12 +1462,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         }
                         gText = "FV=";
                         try {
-                            float = 0.0;
+                            double = 0.0d;
                             if (mPresentValue != null) {
-                                float = mPresentValue * Math.pow((1.0 + mInterestPerYear / mPeriodsPerYear), mYears * mPeriodsPerYear); // From present value
+                                double = mPresentValue * Math.pow((1.0d + mInterestPerYear / mPeriodsPerYear), mYears * mPeriodsPerYear); // From present value
                             }
                             if (mPayment != null) {
-                                float += mPayment * (Math.pow(1.0 + mInterestPerYear / mPeriodsPerYear, mYears * mPeriodsPerYear) - 1.0) / (mInterestPerYear / mPeriodsPerYear) * (gFinancialBeginEnd == End ? 1 : (1.0 + mInterestPerYear / mPeriodsPerYear)); // Adding it recurrent deposit
+                                double += mPayment * (Math.pow(1.0d + mInterestPerYear / mPeriodsPerYear, mYears * mPeriodsPerYear) - 1.0d) / (mInterestPerYear / mPeriodsPerYear) * (gFinancialBeginEnd == End ? 1 : (1.0d + mInterestPerYear / mPeriodsPerYear)); // Adding it recurrent deposit
                             }
                         }
                         catch (e) {
@@ -1452,12 +1475,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             break;
                         }
 
-                        if (!isFinite(float)) {
+                        if (!isFinite(double)) {
                             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                         }
                         else {
-                            gAnswer = stripTrailingZeros(float);
-                            mFutureValue = float;
+                            gAnswer = stripTrailingZeros(double);
+                            mFutureValue = double;
                         }
                         break;
 
@@ -1474,7 +1497,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             mFinancialMissingIY = true;
                             missing = true;
                         }
-                        if (mPeriodsPerYear == null || mPeriodsPerYear == 0.0) {
+                        if (mPeriodsPerYear == null || mPeriodsPerYear == 0.0d) {
                             mFinancialMissingPY = true;
                             missing = true;
                         }
@@ -1486,21 +1509,21 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         try {
                             futureValue = mFutureValue;
                             if (mPresentValue != null) {
-                                float = mPresentValue * Math.pow((1.0 + mInterestPerYear / mPeriodsPerYear), mYears * mPeriodsPerYear); // Present value
-                                futureValue -= float;
+                                double = mPresentValue * Math.pow((1.0d + mInterestPerYear / mPeriodsPerYear), mYears * mPeriodsPerYear); // Present value
+                                futureValue -= double;
                             }
-                            float = futureValue / (((Math.pow(1.0 + mInterestPerYear / mPeriodsPerYear, mYears * mPeriodsPerYear) - 1.0) / (mInterestPerYear / mPeriodsPerYear)) * (gFinancialBeginEnd == End ? 1 : (1.0 + mInterestPerYear / mPeriodsPerYear))); // From payment
+                            double = futureValue / (((Math.pow(1.0d + mInterestPerYear / mPeriodsPerYear, mYears * mPeriodsPerYear) - 1.0d) / (mInterestPerYear / mPeriodsPerYear)) * (gFinancialBeginEnd == End ? 1 : (1.0d + mInterestPerYear / mPeriodsPerYear))); // From payment
                         }
                         catch (e) {
                             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                             break;
                         }
-                        if (!isFinite(float)) {
+                        if (!isFinite(double)) {
                             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                         }
                         else {
-                            gAnswer = stripTrailingZeros(float);
-                            mPayment = (float == 0.0 ? null : float);
+                            gAnswer = stripTrailingZeros(double);
+                            mPayment = (double == 0.0d ? null : double);
                         }
                         break;
 
@@ -1509,15 +1532,16 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             mFinancialMissingFV = true;
                             missing = true;
                         }
-                        if (mPresentValue == null) {
+                        if (mPresentValue == null && mPayment == null) {
                             mFinancialMissingPV = true;
+                            mFinancialMissingDEP = true;
                             missing = true;
                         }
                         if (mInterestPerYear == null) {
                             mFinancialMissingIY = true;
                             missing = true;
                         }
-                        if (mPeriodsPerYear == null || mPeriodsPerYear == 0.0) {
+                        if (mPeriodsPerYear == null || mPeriodsPerYear == 0.0d) {
                             mFinancialMissingPY = true;
                             missing = true;
                         }
@@ -1527,19 +1551,43 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         }
                         gText = "YEARS=";
                         try {
-                            float = Math.ln(mFutureValue / mPresentValue) / Math.ln(1.0 + mInterestPerYear / mPeriodsPerYear) / mPeriodsPerYear;
+                            if (mPresentValue != null && mPayment == null) {
+                                double = Math.ln(mFutureValue / mPresentValue) / Math.ln(1.0d + mInterestPerYear / mPeriodsPerYear) / mPeriodsPerYear;
+                            }
+                            else if (mPresentValue == null && mPayment != null) {
+                                // ln(1 + (FV / P) * r) / ln(1 + r)
+                                // ln(1 + (FV / (P * (1 + r))) * r) / ln(1 + r)
+                                double = Math.ln(1.0d + mFutureValue / (mPayment * (gFinancialBeginEnd == End ? 1 : (1.0d + mInterestPerYear / mPeriodsPerYear)))  * (mInterestPerYear / mPeriodsPerYear)) / Math.ln(1.0d + ((mInterestPerYear / mPeriodsPerYear)));
+                            }
+                            else {
+                                // End:   ln{(FV+PD/r)/(PV+PD/r)}/ln(1+r)
+                                // Begin: ln{(FV+PD/[r*(1+r)])/(PV+PD/[r*(1+r)])}/ln(1+r)
+                                // double = Math.ln((mFutureValue + mPayment / ((mInterestPerYear / mPeriodsPerYear) * (gFinancialBeginEnd == End ? 1.0d : (1.0d + (mInterestPerYear / mPeriodsPerYear))))) / (mPresentValue + mPayment / ((mInterestPerYear / mPeriodsPerYear) * (gFinancialBeginEnd == End ? 1.0d : (1.0d + (mInterestPerYear / mPeriodsPerYear)))))) / Math.ln(1.0d + ((mInterestPerYear / mPeriodsPerYear)));
+                                var int = mInterestPerYear / mPeriodsPerYear;
+                                var intCalc = 1.0d + int;
+                                var beginEnd = (gFinancialBeginEnd == End ? 1.0d : intCalc);
+                                var pmt = mFutureValue + mPayment / (int * beginEnd);
+                                var pv = mPresentValue + mPayment / (int *  beginEnd);
+
+                                double = Math.ln(pmt / pv) / Math.ln(intCalc);
+                                if (gFinancialBeginEnd == Begin) {
+                                    double /= intCalc;
+                                }
+
+                                double /= mPeriodsPerYear;
+                            }
                         }
                         catch (e) {
                             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                             break;
                         }
 
-                        if (!isFinite(float)) {
+                        if (!isFinite(double)) {
                             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                         }
                         else {
-                            gAnswer = stripTrailingZeros(float);
-                            mPeriodsPerYear = float;
+                            gAnswer = stripTrailingZeros(double);
+                            mYears = double;
                         }
                         break;
 
@@ -1556,7 +1604,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             mFinancialMissingYears = true;
                             missing = true;
                         }
-                        if (mPeriodsPerYear == null || mPeriodsPerYear == 0.0) {
+                        if (mPeriodsPerYear == null || mPeriodsPerYear == 0.0d) {
                             mFinancialMissingPY = true;
                             missing = true;
                         }
@@ -1566,19 +1614,19 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         }
                         gText = "I/Y=";
                         try {
-                            float = (Math.pow(mFutureValue / mPresentValue, (1.0 / (mYears * mPeriodsPerYear))) - 1.0) * 100.0 * mPeriodsPerYear;
+                            double = (Math.pow(mFutureValue / mPresentValue, (1.0d / (mYears * mPeriodsPerYear))) - 1.0d) * 100.0d * mPeriodsPerYear;
                         }
                         catch (e) {
                             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                             break;
                         }
 
-                        if (!isFinite(float)) {
+                        if (!isFinite(double)) {
                             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                         }
                         else {
-                            gAnswer = stripTrailingZeros(float);
-                            mInterestPerYear = float / 100.0;
+                            gAnswer = stripTrailingZeros(double);
+                            mInterestPerYear = double / 100.0d;
                         }
                         break;
 
@@ -1602,7 +1650,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             mFinancialMissingIY = true;
                             missing = true;
                         }
-                        if (mPeriodsPerYear == null || mPeriodsPerYear == 0.0) {
+                        if (mPeriodsPerYear == null || mPeriodsPerYear == 0.0d) {
                             mFinancialMissingPY = true;
                             missing = true;
                         }
@@ -1612,18 +1660,18 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         }
                         gText = "LOAN=";
                         try {
-                            float = mPayment / (mInterestPerYear / mPeriodsPerYear * Math.pow(1.0 + mInterestPerYear / mPeriodsPerYear, mYears * mPeriodsPerYear)) * (Math.pow(1.0 + mInterestPerYear / mPeriodsPerYear, mYears * mPeriodsPerYear) - 1.0);
+                            double = mPayment / (mInterestPerYear / mPeriodsPerYear * Math.pow(1.0d + mInterestPerYear / mPeriodsPerYear, mYears * mPeriodsPerYear)) * (Math.pow(1.0d + mInterestPerYear / mPeriodsPerYear, mYears * mPeriodsPerYear) - 1.0d);
                         }
                         catch (e) {
                             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                             break;
                         }
-                        if (!isFinite(float)) {
+                        if (!isFinite(double)) {
                             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                         }
                         else {
-                            gAnswer = stripTrailingZeros(float);
-                            mPresentValue = (float == 0.0 ? null : float);
+                            gAnswer = stripTrailingZeros(double);
+                            mPresentValue = (double == 0.0d ? null : double);
                         }
                         break;
 
@@ -1636,7 +1684,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             mFinancialMissingYears = true;
                             missing = true;
                         }
-                        if (mPeriodsPerYear == null || mPeriodsPerYear == 0.0) {
+                        if (mPeriodsPerYear == null || mPeriodsPerYear == 0.0d) {
                             mFinancialMissingPY = true;
                             missing = true;
                         }
@@ -1646,18 +1694,18 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         }
                         gText = "TC=";
                         try {
-                            float = mPayment * mYears * mPeriodsPerYear;
+                            double = mPayment * mYears * mPeriodsPerYear;
                         }
                         catch (e) {
                             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                             break;
                         }
-                        if (!isFinite(float)) {
+                        if (!isFinite(double)) {
                             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                         }
                         else {
-                            gAnswer = stripTrailingZeros(float);
-                            mFutureValue = (float == 0.0 ? null : float);
+                            gAnswer = stripTrailingZeros(double);
+                            mFutureValue = (double == 0.0d ? null : double);
                         }
                         break;
 
@@ -1674,7 +1722,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             mFinancialMissingIY = true;
                             missing = true;
                         }
-                        if (mPeriodsPerYear == null || mPeriodsPerYear == 0.0) {
+                        if (mPeriodsPerYear == null || mPeriodsPerYear == 0.0d) {
                             mFinancialMissingPY = true;
                             missing = true;
                         }
@@ -1684,18 +1732,18 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         }
                         gText = "PMT=";
                         try {
-                            float = mPresentValue * (mInterestPerYear / mPeriodsPerYear * Math.pow(1.0 + mInterestPerYear / mPeriodsPerYear, mYears * mPeriodsPerYear)) / (Math.pow(1.0 + mInterestPerYear / mPeriodsPerYear, mYears * mPeriodsPerYear) - 1.0);
+                            double = mPresentValue * (mInterestPerYear / mPeriodsPerYear * Math.pow(1.0d + mInterestPerYear / mPeriodsPerYear, mYears * mPeriodsPerYear)) / (Math.pow(1.0d + mInterestPerYear / mPeriodsPerYear, mYears * mPeriodsPerYear) - 1.0d);
                         }
                         catch (e) {
                             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                             break;
                         }
-                        if (!isFinite(float)) {
+                        if (!isFinite(double)) {
                             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
                         }
                         else {
-                            gAnswer = stripTrailingZeros(float);
-                            mPayment = (float == 0.0 ? null : float);
+                            gAnswer = stripTrailingZeros(double);
+                            mPayment = (double == 0.0d ? null : double);
                         }
                         break;
 
@@ -1717,38 +1765,65 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
     }
 
-    function getNumber(float)
+    function prefillmOps() {
+        // See if we should use gAnswer for our value. 
+        // Conditions are:
+        //      We currently have nothing stored in our stack
+        //      We're at the top of our stack or
+        //      What we have before us is a command (allows us to change command as long as we dont type a number or a '-' (which means negative number will follow))
+        //      But if we have a % command pending, it's ok to have a command so do use gAnswer
+        if (mOps[mOps_pos] == null && (mOps_pos == 0 || (mOps_pos > 0 && (!(mOps[mOps_pos - 1] instanceof Lang.Number) || mUnaryPending || mPercentPending)))) {
+            mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+        }
+ 
+        mUnaryPending = false; // Wether we used mUnaryPending or not, we reset it to false so it doesn't linger around
+
+        // Make sure that 'number' is not a lone '-'
+        if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
+            if (mOps[mOps_pos].equals("-")) { // Can't be just a '-'
+                gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                return 0;  // Error, aboirt
+            }
+            return 1; // We're a number
+        }
+        else if (mOps_pos > 0 && mOps[mOps_pos - 1] != Oper_ParenOpen) {
+            return 2; // We're a command other than an open parenthesis
+        }
+        return 3; // If we get here, we ignore what was entered (so far)
+    }
+
+    function clearStack() {
+        gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+        do {
+            mOps[mOps_pos] = null;
+            mOps_pos--;
+        } while (mOps_pos >= 0);
+        mOps_pos = 0;
+        mParenCount = 0;
+        mUnaryPending = false;
+        mPercentPending = false;
+    }
+
+    function getDouble(double)
     {
-        if (float != null) {
+        if (double != null) {
             try {
-                float = float.toFloat();
+                double = double.toDouble();
             }
             catch (e) {
                 // Clear up the stack so we don't get stuck in an infinite loop
-                do {
-                    mOps[mOps_pos] = null;
-                    mOps_pos--;
-                } while (mOps_pos >= 0);
-                mOps_pos = 0;
-                mParenCount = 0;
-                mPercentPending = false;
+                clearStack();
                 return null;
             }
         }
         
-        if (float == null) {
+        if (double == null) {
             // Clear up the stack so we don't get stuck in an infinite loop
-            do {
-                mOps[mOps_pos] = null;
-                mOps_pos--;
-            } while (mOps_pos >= 0);
-            mOps_pos = 0;
-            mParenCount = 0;
-            mPercentPending = false;
+            clearStack();
             return null;
         }
         
-        return float;
+        return double;
     }
 
     function calcPrevious(oper) {
@@ -1769,8 +1844,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
             right = gAnswer;
         }
 
-        left = getNumber(left);
-        right = getNumber(right);
+        left = getDouble(left);
+        right = getDouble(right);
         if (left == null || right == null) {
             gError = WatchUi.loadResource(Rez.Strings.label_invalid);
             return;
@@ -1796,7 +1871,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                     return;
                 }
 
-                mPercentPending = false;
+                mPercentPending = true;
                 gAnswer = stripTrailingZeros(left - right);
                 mOps[mOps_pos] = null;
                 mOps_pos--;
@@ -1816,7 +1891,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                 break;
 
             case Oper_Divide:
-                if (right != 0.0) {
+                if (right != 0.0d) {
                     gAnswer = stripTrailingZeros(left / right);
                     mOps[mOps_pos] = null;
                     mOps_pos--;
@@ -1827,34 +1902,18 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                 }
                 else {
                     gError = WatchUi.loadResource(Rez.Strings.label_divide0);
-                    do {
-                        mOps[mOps_pos] = null;
-                        mOps_pos--;
-                    } while (mOps_pos >= 0);
-                    mOps_pos = 0;
-                    mParenCount = 0;
-                    mPercentPending = false;
+                    clearStack();
                 }
                 break;
 
             case Oper_Exponent:
-                // if (oper == Oper_Percent) {
-                //     right /=  100.0;
-                // }
-
                 if (gInvActive) {
-                    if (right != 0.0) {
-                        gAnswer = stripTrailingZeros(Math.pow(left, 1.0 / right));
+                    if (right != 0.0d) {
+                        gAnswer = stripTrailingZeros(Math.pow(left, 1.0d / right));
                     }
                     else {
                         gError = WatchUi.loadResource(Rez.Strings.label_divide0);
-                        do {
-                            mOps[mOps_pos] = null;
-                            mOps_pos--;
-                        } while (mOps_pos >= 0);
-                        mOps_pos = 0;
-                        mParenCount = 0;
-                        mPercentPending = false;
+                        clearStack();
                     }
                 }
                 else {
@@ -1922,6 +1981,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                     }
                 }
 
+                gText = "D=" + gDigits;
                 Storage.setValue("digits", gDigits);
             }
             // Main area of the screen was swiped, keep the direction with the most movement
@@ -1959,6 +2019,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 gDataViewPos = gDataCount - 1;
                             }
                             gAnswer = stripTrailingZeros(gDataPoints[gDataViewPos]);
+                            mUnaryPending = true;
                         }
                         else {
                             if (mHistorySize == 0) {
@@ -2005,6 +2066,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     gCurrentHistoryIncIndex = count - 1;
                                 }
                                 gAnswer = answer;
+                                mUnaryPending = true;
                             }
                             else {
                                 gCurrentHistoryIncIndex = null;
@@ -2018,6 +2080,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 gDataViewPos = 0;
                             }
                             gAnswer = stripTrailingZeros(gDataPoints[gDataViewPos]);
+                            mUnaryPending = true;
                         }
                         else {
                             if (mHistorySize == 0) {
@@ -2070,6 +2133,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     gCurrentHistoryIncIndex = 0;
                                 }
                                 gAnswer = answer;
+                                mUnaryPending = true;
                             }
                             else {
                                 gCurrentHistoryIncIndex = null;
@@ -2115,7 +2179,9 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function isFinite(x) {
-        return !x.equals(NaN) && !x.equals(Math.acos(45));
+
+        var float = x.toFloat();
+        return !float.equals(NaN) && !float.equals(Math.acos(45));
     }
 
     function bubble_sort(array) {

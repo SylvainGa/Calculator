@@ -18,4 +18,5 @@
 
 	<string id="setting_historySize">Dimension de l'historique des résultats</string>
 	<string id="setting_panelOrder">Ordre des panneaux</string>
+	<string id="setting_vibrateOnTouch">Vibration au touché</string>
 </strings>

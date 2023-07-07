@@ -8,6 +8,10 @@
     </setting>
 
     <setting propertyKey="@Properties.panelOrder" title="@Strings.setting_panelOrder">
-		<settingConfig type="alphaNumeric" readonly="false"/>
+		<settingConfig type="alphaNumeric" required="true"/>
+    </setting>
+
+    <setting propertyKey="@Properties.vibrateOnTouch" title="@Strings.setting_vibrateOnTouch">
+		<settingConfig type="boolean" required="true"/>
     </setting>
 </settings>

@@ -52,6 +52,13 @@ If you like the widget, please consider [leaving a positive review](https://apps
 If you want to have the widget translated to your language, contact me through email or github.
 
 ## Changelog
+V1.3.0 Added the following:
+- Calculating number of years for Savings terms now work with Present Value AND/OR Deposit, for both Begin and End.
+- MS will be switched to M+ once a number is stored in memory. Storing 0 erases the memory.
+- Internal calculations are performed in double precision to increase the accuracy of the result.
+- When increasing/decreasing the number of decimals to display, the number of decimals will be shown in the lower right corner of the result area. 
+- Unary operators are now being used correctly anywhere in arithmetic calculations, not just as the first value.
+
 V1.2.2 Crash fix in the statistical function when summing number with invalid data in input queue. Reworked the arithmetic code to fix some weird issues.
 
 V1.2.1 Crash fix in the parenthesis arithmetic code plus display how many levels of parenthesis are opened on the screen to help you track your calculations.

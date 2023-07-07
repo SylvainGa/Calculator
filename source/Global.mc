@@ -92,4 +92,3 @@ function limitDigits(answer) {
         return stripTrailingZeros(answerStr.toString());
     }
 }
-
