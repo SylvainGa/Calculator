@@ -14,4 +14,8 @@
     <setting propertyKey="@Properties.vibrateOnTouch" title="@Strings.setting_vibrateOnTouch">
 		<settingConfig type="boolean" required="true"/>
     </setting>
+
+    <setting propertyKey="@Properties.restoreOnLaunch" title="@Strings.setting_restoreOnLaunch">
+		<settingConfig type="boolean" required="true"/>
+    </setting>
 </settings>

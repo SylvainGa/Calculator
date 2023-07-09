@@ -30,7 +30,7 @@ enum { Oper_DOT = 0,
 
 class CalculatorDelegate extends WatchUi.BehaviorDelegate {
     var mTimer;
-    var mOps = new [100];
+    var mOps = new [20];
     var mOps_pos; 
     var mHistorySize;
     var mCountHistory;
@@ -38,6 +38,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
     var mUnaryPending;
     var mPercentPending;
     var mVibrateOnTouch;
+    var mRestoreOnLaunch;
 
     // Financial var
     var mPresentValue;
@@ -86,6 +87,29 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
         mFinancialMissingPY = false;
 
         restoreDataPoints();
+
+        // Read into memory if we had a pending operations when we last left
+        try {
+            mRestoreOnLaunch = Properties.getValue("restoreOnLaunch");
+        }
+        catch (e) {
+            mRestoreOnLaunch = false;
+            Properties.setValue("restoreOnLauch", mRestoreOnLaunch);
+        }
+        if (mRestoreOnLaunch != null && mRestoreOnLaunch == true) {
+            mOps_pos = Storage.getValue("mOps_pos");
+            if (mOps_pos == null) {
+                mOps_pos = 0;
+            }
+            else {
+                mOps = Storage.getValue("pendingOps");
+                gAnswer = Storage.getValue("gAnswer");
+                gText = WatchUi.loadResource(Rez.Strings.label_restored);
+            }
+        }
+        else {
+            mRestoreOnLaunch = false;
+        }
 
         try {
             mHistorySize = Properties.getValue("historySize");
@@ -1283,8 +1307,30 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                     }
                     break;
             }
+
+            if (mOps_pos == 0 && mOps[0] == null && gAnswer == null) {
+                if (mRestoreOnLaunch == true) {
+                    Storage.deleteValue("pendingOps");
+                    Storage.deleteValue("mOps_pos");
+                    Storage.deleteValue("gAnswer");
+                }
+            }
+            else {
+                if (mRestoreOnLaunch == true) {
+                    Storage.setValue("pendingOps", mOps);
+                    Storage.setValue("mOps_pos", mOps_pos);
+                    Storage.setValue("gAnswer", gAnswer);
+                }
+            }
         }
         else {
+            if (mRestoreOnLaunch == true) {
+                Storage.deleteValue("pendingOps");
+                Storage.deleteValue("mOps_pos");
+                Storage.deleteValue("gAnswer");
+            }
+            gText = null;
+
             if (mOps[mOps_pos] == null) {
                 mOps[mOps_pos] = gAnswer;
             }
@@ -1952,6 +1998,9 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
             mDragStartY = coord[1];
         }
         else if (dragEvent.getType() == WatchUi.DRAG_TYPE_STOP) {
+            if (mDragStartY == null || mDragStartX == null) { // This shouldn't happened but I've seen unhandled exception for mDragStartY below!
+                return true;
+            }
             var height = System.getDeviceSettings().screenHeight;
             if (mDragStartY < height / 5) { // 'Swiped' the answer portion, only test if left or right
                 if (gDataEntry) {

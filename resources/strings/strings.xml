@@ -1,6 +1,6 @@
 <strings>
     <string id="AppName">Calculator</string>
-    <string id="AppNameVersion">Calculator V1.3</string>
+    <string id="AppNameVersion">Calculator V1.4.0</string>
     <string id="shortComplicationLabel">Calc</string>
     <string id="longComplicationLabel">Calculator</string>
 
@@ -16,8 +16,10 @@
 	<string id="label_missingData">Missing Data</string>
 	<string id="label_noData">No Data</string>
 	<string id="label_notPresent">Not found</string>
+	<string id="label_restored">Restored</string>
 	
 	<string id="setting_historySize">Size of history buffer</string>
 	<string id="setting_panelOrder">Panel order</string>
 	<string id="setting_vibrateOnTouch">Vibrate on touch</string>
+	<string id="setting_restoreOnLaunch">Restore unfinished calculations on next launch</string>
 </strings>

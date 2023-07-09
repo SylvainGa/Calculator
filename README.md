@@ -52,6 +52,10 @@ If you like the widget, please consider [leaving a positive review](https://apps
 If you want to have the widget translated to your language, contact me through email or github.
 
 ## Changelog
+V1.4.0 Added the following:
+- Setting to restore unfinished calculation at next launch. Useful if your watch stops the widget after a certain time. With this option set, you'll be exactly where you left of.
+- Workaround for crash when swiping the screen because of an internal Garmin bug. 
+
 V1.3.0 Added the following:
 - Calculating number of years for Savings terms now work with Present Value AND/OR Deposit, for both Begin and End.
 - MS will be switched to M+ once a number is stored in memory. Storing 0 erases the memory.
