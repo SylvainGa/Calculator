@@ -52,6 +52,8 @@ If you like the widget, please consider [leaving a positive review](https://apps
 If you want to have the widget translated to your language, contact me through email or github.
 
 ## Changelog
+V1.4.1 Fixed a crash when just a '-' was in memory and a M+ was performed to it.
+
 V1.4.0 Added the following:
 - Setting to restore unfinished calculation at next launch. Useful if your watch stops the widget after a certain time. With this option set, you'll be exactly where you left of.
 - Workaround for crash when swiping the screen because of an internal Garmin bug. 

@@ -414,30 +414,29 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             break;
 
                         case 10: // MS
-                            if (mOps[mOps_pos] == null) {
-                                mOps[mOps_pos] = gAnswer;
+                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                            if (prefillResult == 0) { // Invalid number entered
+                                break;
                             }
-                            if (mOps[mOps_pos] == null) {
-                                mOps[mOps_pos] = "0.";
-                            }
+                            else if (prefillResult == 1) { // Valid number entered
+                                var double = mOps[mOps_pos].toDouble();
 
-                            gAnswer = stripTrailingZeros(mOps[mOps_pos]);
-                            var double = gAnswer.toDouble();
-                            if (double != 0.0d) {
-                                // Empty? Stock it
-                                if (gMemory == null) {
-                                    gMemory = gAnswer;
+                                if (double != 0.0d) {
+                                    // Empty? Stock it
+                                    if (gMemory == null) {
+                                        gMemory = gAnswer;
+                                    }
+                                    // Otherwise add to it
+                                    else {
+                                        gMemory = stripTrailingZeros(gMemory.toDouble() + double);
+                                    }
+                                    Storage.setValue("Memory", gMemory);
                                 }
-                                // Otherwise add to it
+                                // Storing 0 is like erasing it
                                 else {
-                                    gMemory = stripTrailingZeros(gMemory.toDouble() + double);
+                                    gMemory = null;
+                                    Storage.deleteValue("Memory");
                                 }
-                                Storage.setValue("Memory", gMemory);
-                            }
-                            // Storing 0 is like erasing it
-                            else {
-                                gMemory = null;
-                                Storage.deleteValue("Memory");
                             }
                             mOps[mOps_pos] = null;
 
@@ -1828,7 +1827,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
         if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
             if (mOps[mOps_pos].equals("-")) { // Can't be just a '-'
                 gError = WatchUi.loadResource(Rez.Strings.label_invalid);
-                return 0;  // Error, aboirt
+                return 0;  // Error, abort
             }
             return 1; // We're a number
         }
