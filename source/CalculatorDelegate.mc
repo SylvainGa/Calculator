@@ -39,6 +39,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
     var mPercentPending;
     var mVibrateOnTouch;
     var mRestoreOnLaunch;
+    var mExit;
 
     // Financial var
     var mPresentValue;
@@ -71,6 +72,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
             mTimer = new Timer.Timer();
         }
     
+        mExit = true;
+
         mOps_pos = 0;
         mCountHistory = true;
         mRecall = false;
@@ -1986,11 +1989,18 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onBack() {
-        return false;
+        if (mExit) {
+            return false;
+        }
+
+        mExit = true;
+        return true;
     }
 
     function onDrag(dragEvent ) {
         var coord = dragEvent.getCoordinates();
+
+        mExit = false;
 
         if (dragEvent.getType() == WatchUi.DRAG_TYPE_START) {
             mDragStartX = coord[0];

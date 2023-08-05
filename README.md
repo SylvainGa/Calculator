@@ -52,7 +52,9 @@ If you like the widget, please consider [leaving a positive review](https://apps
 If you want to have the widget translated to your language, contact me through email or github.
 
 ## Changelog
-V1.4.1 Fixed a crash when just a '-' was in memory and a M+ was performed to it.
+V1.4.1 Some watches, like the VivoActive 4S behaves differently in the simulator than on the real device. On those devices, don't swipe too fast or it won't record the swipe. You'll also have to press the Back button TWICE to leave the app.
+
+Fixed a crash when just a '-' was in memory and a M+ was performed to it.
 
 V1.4.0 Added the following:
 - Setting to restore unfinished calculation at next launch. Useful if your watch stops the widget after a certain time. With this option set, you'll be exactly where you left of.
