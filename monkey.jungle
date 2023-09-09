@@ -24,3 +24,5 @@ venu2plus.resourcePath=$(venu2plus.resourcePath);resources-complications
 venu2s.resourcePath=$(venu2s.resourcePath);resources-complications
 venusq2.resourcePath=$(venusq2.resourcePath);resources-complications
 venusq2m.resourcePath=$(venusq2m.resourcePath);resources-complications
+venu3.resourcePath=$(venu3.resourcePath);resources-complications
+venu3s.resourcePath=$(venu3s.resourcePath);resources-complications
