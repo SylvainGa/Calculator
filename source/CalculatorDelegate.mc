@@ -2055,7 +2055,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         gText = null;
                         gDataView = false;
                         gGrid++;
-                        if (gGrid > GRID_COUNT) {
+                        if (gGrid > gPanelSize) {
                             gGrid = 1;
                         }
                     }
@@ -2065,7 +2065,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         gDataView = false;
                         gGrid--;
                         if (gGrid < 1) {
-                            gGrid = GRID_COUNT;
+                            gGrid = gPanelSize;
                         }
                     }
                 }

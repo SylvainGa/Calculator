@@ -25,6 +25,7 @@ var gInvActive = false;
 var gCurrentHistoryIndex = null;
 var gCurrentHistoryIncIndex = null;
 var gPanelOrder = [1, 2, 3, 4, 5, 6];
+var gPanelSize = 6;
 
 var gDegRad = Degree;
 
@@ -66,14 +67,16 @@ class CalculatorView extends WatchUi.View {
 
         if (panelOrderStr != null) {
             var array = to_array(panelOrderStr, ",");
-            if (array.size() == GRID_COUNT) {
-                for (var i = 0; i < GRID_COUNT; i++) {
+            if (array.size() > 1 && array.size() <= GRID_COUNT) {
+                var i;
+                for (i = 0; i < array.size(); i++) {
                     var val;
                     try {
                         val = array[i].toNumber();
                     }
                     catch (e) {
                         gPanelOrder = [1, 2, 3, 4, 5, 6];
+                        i = 6;
                         break;
                     }
 
@@ -82,8 +85,16 @@ class CalculatorView extends WatchUi.View {
                     }
                     else {
                         gPanelOrder = [1, 2, 3, 4, 5, 6];
+                        i = 6;
                         break;
                     }
+                }
+
+                gPanelSize = i;
+
+                while (i < GRID_COUNT) {
+                    gPanelOrder[i] = null;
+                    i++;
                 }
             }
         }
