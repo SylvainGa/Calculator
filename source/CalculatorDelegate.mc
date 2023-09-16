@@ -1929,6 +1929,9 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                 break;
 
             case Oper_Multiply:
+                if (oper == Oper_Exponent) {
+                    return;
+                }
                 gAnswer = stripTrailingZeros(left * right);
                 mOps[mOps_pos] = null;
                 mOps_pos--;
@@ -1939,6 +1942,9 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                 break;
 
             case Oper_Divide:
+                if (oper == Oper_Exponent) {
+                    return;
+                }
                 if (right != 0.0d) {
                     gAnswer = stripTrailingZeros(left / right);
                     mOps[mOps_pos] = null;

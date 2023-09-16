@@ -52,6 +52,8 @@ If you like the widget, please consider [leaving a positive review](https://apps
 If you want to have the widget translated to your language, contact me through email or github.
 
 ## Changelog
+V1.5.1 Fixes the order of precedence for the exponent (x^y) code so it's performed before any other operation (so 50 x 1.03^5 yields 57.9637 now and not 362273148.21875)
+
 V1.5.0 Allow the removal of some panels
 
 V1.4.2 Added Venu3 and Venu3S as supported devices
