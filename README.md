@@ -31,7 +31,7 @@ Please raise an issue if anything doesn't work correctly, or if you use an unsup
 
 To use, launch it, preferably from a Glance. Reason is when launched from a Glance, gestures are available right away, instead of having to spawn a subview. If not launched from a Glance, you'll be asked to press the screen so the subview can be launched and activate the gestures.
 
-Press any of the corresponding 'buttons' to activate it. The top of the screen has the result. Touch it to simulate an '=' and terminate the equation. The answer will then be stored in its history buffer.
+Press any of the corresponding 'buttons' to activate it. There is no EQUAL button because THE TOP OF THE SCREEN acts as an EQUAL sign. TOUCH IT TO SIMULATE AN '=' (EQUAL) AND TERMINATE THE EQUATION. The answer will then be stored in its history buffer.
 
 To delete the last digit, use Delete Digit (DD). To clear the line, use Clear All (CA).
 
@@ -41,7 +41,7 @@ To enter an exponent, first press the '.' button if you haven't already entered 
 
 You scroll through the history by a swipe down/up gesture. A swipe down moves forward in the history while an up gesture moves backward. The latest result is in Position 0 (H=0) as well as viewable from the Glance view.
 
-You change panel by left and right swipes. Right swipes move forward in the panel order while left swipes move backward.
+You change panel by left and right swipes. Right swipes move forward in the panel order while left swipes move backward. The operators +, -, x, ÷ and CA will autoreturn to the number panel.
 
 The calculator follows order of operations, so multiplications, divisions and "x power of y" are performed before additions and subtractions. These can be overridden by usage of parenthesis. You can nest parenthesis to perform complex operations.
 
@@ -58,7 +58,7 @@ If you want to have the widget translated to your language, contact me through e
 ## Changelog
 V1.6.0 Added the following
   Large and small numbers are now displayed/entered using exponents. The '.' button becomes a 'E' button once a decimal is entered so you can enter an exponent.
-  As soon as an operation is entered (+, -, x, ÷ and CA), the screen autoreturns to panel 1 so you cam right away start entering number without having to swipe.
+  As soon as an operation is entered (+, -, x, ÷ and CA), the screen autoreturns to the number panel so you cam right away start entering number without having to swipe.
 
 V1.5.2 Added support for the VivoActive5
 
