@@ -1,6 +1,6 @@
 <strings>
     <string id="AppName">Calculator</string>
-    <string id="AppNameVersion">Calculator V1.5.0</string>
+    <string id="AppNameVersion">Calculator V1.6.0</string>
     <string id="shortComplicationLabel">Calc</string>
     <string id="longComplicationLabel">Calculator</string>
 
@@ -11,7 +11,7 @@
 	<string id="label_launch">to launch</string>
 
 	<string id="label_divide0">Divide by zero</string>
-	<string id="label_invalid">Invalid</string>
+	<string id="label_invalid" scope="glance">Invalid</string>
 	<string id="label_unavailable">Unavailable</string>
 	<string id="label_missingData">Missing Data</string>
 	<string id="label_noData">No Data</string>

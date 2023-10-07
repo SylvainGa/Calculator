@@ -1,8 +1,10 @@
 import Toybox.Graphics;
 import Toybox.WatchUi;
 import Toybox.Lang;
+import Toybox.Math;
 using Toybox.Application.Storage;
 
+(:glance)
 function to_array(string, splitter) {
 	var array = new [30]; //Use maximum expected length
 	var index = 0;
@@ -26,6 +28,7 @@ function to_array(string, splitter) {
 	return result;
 }
 
+(:glance)
 function stripTrailingZeros(number) {
     if (number == null) {
         number = "0";
@@ -40,7 +43,7 @@ function stripTrailingZeros(number) {
         }
     }
 
-    var numberStr = number.toString();
+    var numberStr = number.toDouble().toString();
     var dotPos = numberStr.find(".");
     if (dotPos == null) {
         numberStr = number.toNumber();
@@ -66,12 +69,47 @@ function stripTrailingZeros(number) {
 }
 
 // Limit the number of digits
+(:glance)
 function limitDigits(answer) {
     if (answer == null) {
         answer = "0";
     }
 
-    var answerStr = answer.toString();
+//    var answerStr = answer.toString();
+
+    // Convert to exponential format if too big or too small
+    var exp = 0;
+    var expStr = "";
+
+    // We shouldn't get a lone "-" here, flag it as invalid
+    if (answer instanceof Lang.String && answer.equals("-")) {
+        gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+        return("");
+    }
+
+    var answerDbl = answer.toDouble();
+    var answerStr = answerDbl.toString();
+
+    // Because of precision error, it could try to display "-0", don't
+    if (answerStr.equals("-0")) {
+        answerStr = "0";
+    }
+
+    // Split exponent and mantissa if any
+/*    var expPos = answerStr.find("E");
+    if (expPos != null) {
+        expStr = answerStr.substring(expPos, expPos + 4);
+        answerStr = answerStr.substring(0, expPos - 1);
+    }
+*/
+    if (answerDbl != 0) {
+        exp = Math.log(answerDbl.abs(), 10);
+        exp = (exp  + 0.000000005).toNumber(); // Stupid precision error of Monkey C
+        if (exp > 7 || exp < -7) {
+            answerStr = (answerDbl / Math.pow(10, exp)).toString();
+            expStr = "E" + exp;
+        }
+    }
 
     // Because of precision error, it could try to display "-0", don't
     if (answerStr.equals("-0")) {
@@ -86,9 +124,9 @@ function limitDigits(answer) {
     }
 
     if (gDigitsChanged) {
-        return answerStr.toString();
+        return answerStr.toString() + expStr;
     }
     else {
-        return stripTrailingZeros(answerStr.toString());
+        return stripTrailingZeros(answerStr.toString()) + expStr;
     }
 }

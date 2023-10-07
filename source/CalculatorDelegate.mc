@@ -153,7 +153,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
         gOpText = null;
         gDataEntry = false;
         gDigitsChanged = false;
-
+        
         mFinancialMissingPV = false;
         mFinancialMissingFV = false;
         mFinancialMissingDEP = false;
@@ -200,7 +200,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
             switch (gPanelOrder[gGrid - 1]) {
                 case 1:
-                    gDataEntry = true; // Out flag to tell the display code NOT to limit the number of decimals
+                    gDataEntry = true; // Our flag to tell the display code NOT to limit the number of decimals
 
                     array = ["", "7", "8", "9", "4", "5", "6", "1", "2", "3", "0", Oper_DOT ];
                     if (mOps[mOps_pos] == null || mOps[mOps_pos].equals("0")) {
@@ -213,8 +213,11 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                     }
                     else {
                         if (array[gHilight] == Oper_DOT) {
-                            if (mOps[mOps_pos].find(".") == null) { // Make sure we only add ONE dot!
+                            if (mOps[mOps_pos].find(".") == null) { // If we have a dot already, "." became "E" so we're now entering the exponent
                                 mOps[mOps_pos] += ".";
+                            }
+                            else {
+                                mOps[mOps_pos] += "E";
                             }
                         }
                         else {
@@ -276,6 +279,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             gError = null;
                             gInvActive = false;
                             gText = null;
+                            switchToNumberPanel();
                             break;
 
                         case 4: // Add
@@ -294,24 +298,37 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 mOps[mOps_pos - 1] = Oper_Add;
                             }
                             gOpText = "+";
+                            switchToNumberPanel();
                             break;
 
                         case 5: // Substract (or negative number)
-                            // If we didn't type a number, use what's on the display
+                            // If we didn't type a number, use what's on the display but see within for a lone '-'
                             if (mOps[mOps_pos] == null) {
-                                if (mOps_pos > 0 && mOps[mOps_pos - 1] instanceof Lang.Number) { // But not if the previous item in our stack is an operation. If so, assume we want to enter a negative numner
+                                if (mOps_pos > 0 && mOps[mOps_pos - 1] instanceof Lang.Number || // But not if the previous item in our stack is an operation. If so, assume we want to enter a negative numner
+                                    mOps_pos == 0 && gAnswer == null) { // Or our stack is empty and so is our data entry. Assume we want to enter a negative number
                                     gAnswer = "-";
                                     mOps[mOps_pos] = gAnswer;
+                                    gDataEntry = true; // Our flag to tell the display code NOT to limit the number of decimals
+                                    switchToNumberPanel();
                                     break;
                                 }
                                 else {
                                     mOps[mOps_pos] = gAnswer;
                                 }
                             }
+
                             // We currently have something in the input queue
                             if (mOps[mOps_pos] != null) {
                                 // And that something is a 'number' (shown as a string)
                                 if (mOps[mOps_pos] instanceof Lang.String) {
+                                    // If the last character of that string is a 'E', we want a negative exponent
+                                    if (mOps[mOps_pos].substring(mOps[mOps_pos].length() - 1, mOps[mOps_pos].length()).equals("E")) {
+                                        mOps[mOps_pos] += "-";
+                                        gAnswer = mOps[mOps_pos];
+                                        gDataEntry = true; // Our flag to tell the display code NOT to limit the number of decimals
+                                        switchToNumberPanel();
+                                        break;
+                                    }
                                     calcPrevious(Oper_Substract);
                                     mOps_pos++;
                                     mOps[mOps_pos] = Oper_Substract;
@@ -324,14 +341,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 }
                                 gOpText = "-";
                             }
-                            // Our input queue is empty, what will follow will be a negative number
-                            else {
-                                gAnswer = "-";
-                                mOps[mOps_pos] = gAnswer;
-                            }
+                            switchToNumberPanel();
                             break;
 
                         case 6: // DD
+                            gDataEntry = true; // Our flag to tell the display code NOT to limit the number of decimals
+
                             if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String && mOps[mOps_pos].length() > 0) {
                                 mOps[mOps_pos] = mOps[mOps_pos].substring(0, mOps[mOps_pos].length() - 1);
 
@@ -364,6 +379,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 mOps[mOps_pos - 1] = Oper_Multiply;
                             }
                             gOpText = "×";
+                            switchToNumberPanel();
                             break;
 
                         case 8: // Divide
@@ -382,6 +398,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 mOps[mOps_pos - 1] = Oper_Divide;
                             }
                             gOpText = "÷";
+                            switchToNumberPanel();
                             break;
 
                         case 9: // Percent
@@ -1412,6 +1429,14 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
         return true;
     }
 
+    function switchToNumberPanel() {
+        for (gGrid = gPanelSize; gGrid > 1; gGrid--) {
+            if (gPanelOrder[gGrid - 1] == 1) {
+                break;
+            }
+        }
+    }
+
     function saveDataPoints() {
         Storage.setValue("DataPoints", gDataPoints);
     }
@@ -2034,7 +2059,13 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                     var answerStr = limitDigits(gAnswer); // Get the number we should be displaying so we can drop the last digit
                     var dotPos = answerStr.find(".");
                     if (dotPos != null) {
-                        gDigits = answerStr.length() - (dotPos + 1) - 1;
+                        var expPos = answerStr.find("E");
+                        if (expPos) {
+                            gDigits = expPos - (dotPos + 1) - 1;
+                        }
+                        else {
+                            gDigits = answerStr.length() - (dotPos + 1) - 1;
+                        }
                     }
                     else { // No dot, simply decrease by one
                         gDigits--;

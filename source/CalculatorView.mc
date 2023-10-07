@@ -155,8 +155,14 @@ class CalculatorView extends WatchUi.View {
                         drawInside(dc, width / 3 * col + width / 6, height / 5 * (row + 1) + height / 10, row * 3 + col + 1, array[row][col], false, font);
                     }
                 }
+
+                var dotOrE = " . ";
+                if (gDataEntry && gAnswer != null && gAnswer.toString().find(".") != null) {
+                    dotOrE = " E ";
+                }
+
                 drawInside(dc, width / 4 + (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 10, " 0 ", false, Graphics.FONT_SMALL);
-                drawInside(dc, width - width / 4 - (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 11, " . ", false, Graphics.FONT_SMALL);
+                drawInside(dc, width - width / 4 - (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 11, dotOrE, false, Graphics.FONT_SMALL);
                 break;
 
             case 2:

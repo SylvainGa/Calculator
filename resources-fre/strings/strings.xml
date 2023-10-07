@@ -10,7 +10,7 @@
 	<string id="label_launch">pour démarrer</string>
 
 	<string id="label_divide0">Division par zéro</string>
-	<string id="label_invalid">Invalide</string>
+	<string id="label_invalid" scope="glance">Invalide</string>
 	<string id="label_unavailable">Non disponible</string>
 	<string id="label_missingData">Donnée Manquante</string>
 	<string id="label_noData">Aucune donnée</string>

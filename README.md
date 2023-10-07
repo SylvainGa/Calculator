@@ -33,7 +33,11 @@ To use, launch it, preferably from a Glance. Reason is when launched from a Glan
 
 Press any of the corresponding 'buttons' to activate it. The top of the screen has the result. Touch it to simulate an '=' and terminate the equation. The answer will then be stored in its history buffer.
 
-To delete the last digit, use Delete Digit (DD). To clear the line, use Clear All (CA). To enter a negative number, before its first digit, enter a '-'.
+To delete the last digit, use Delete Digit (DD). To clear the line, use Clear All (CA).
+
+To enter a negative number or exponent, before its first digit, enter a '-'.
+
+To enter an exponent, first press the '.' button if you haven't already entered a decimal point and the button will change to an 'E'. Press it followed by the corresponding exponent number.
 
 You scroll through the history by a swipe down/up gesture. A swipe down moves forward in the history while an up gesture moves backward. The latest result is in Position 0 (H=0) as well as viewable from the Glance view.
 
@@ -52,6 +56,10 @@ If you like the widget, please consider [leaving a positive review](https://apps
 If you want to have the widget translated to your language, contact me through email or github.
 
 ## Changelog
+V1.6.0 Added the following
+  Large and small numbers are now displayed/entered using exponents. The '.' button becomes a 'E' button once a decimal is entered so you can enter an exponent.
+  As soon as an operation is entered (+, -, x, ÷ and CA), the screen autoreturns to panel 1 so you cam right away start entering number without having to swipe.
+
 V1.5.2 Added support for the VivoActive5
 
 V1.5.1 Fixes the order of precedence for the exponent (x^y) code so it's performed before any other operation (so 50 x 1.03^5 yields 57.9637 now and not 362273148.21875)
