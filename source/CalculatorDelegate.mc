@@ -25,7 +25,8 @@ enum { Oper_DOT = 0,
        Oper_LogE,
        Oper_Invert,
        Oper_Square,
-       Oper_Exponent
+       Oper_Exponent,
+       Oper_NthRoot
     }
 
 class CalculatorDelegate extends WatchUi.BehaviorDelegate {
@@ -659,23 +660,30 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
                         case 11: // x^y
                             prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                            var op = Oper_Exponent;
+                            if (gInvActive) {
+                                op = Oper_NthRoot;
+                            }
                             if (prefillResult == 0) { // Invalid number entered
                                 break;
                             }
                             else if (prefillResult == 1) { // Valid number entered
-                                calcPrevious(Oper_Exponent);
+                                calcPrevious(op);
                                 mOps_pos++;
-                                mOps[mOps_pos] = Oper_Exponent;
+                                mOps[mOps_pos] = op;
                                 mOps_pos++;
                                 mOps[mOps_pos] = null;
                             }
                             else if (prefillResult == 2) { // Not a number, must be an operation (other than open parenthesise), replace it with this
-                                mOps[mOps_pos - 1] = Oper_Exponent;
+                                mOps[mOps_pos - 1] = op;
                             }
-
-                            gOpText = "^";
+                            if (gInvActive) {
+                                gOpText = "v";
+                            } else {
+                                gOpText = "^";
+                            }
                             gInvActive = false;
-
+                            switchToNumberPanel();
                             break;
 
                     }
@@ -1926,7 +1934,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
         switch (mOps[mOps_pos - 1]) {
             case Oper_Add:
-                if ((oper == Oper_Multiply || oper == Oper_Divide || oper == Oper_Exponent) && mPercentPending == false) {
+                if ((oper == Oper_Multiply || oper == Oper_Divide || oper == Oper_Exponent || oper == Oper_NthRoot) && mPercentPending == false) {
                     return;
                 }
 
@@ -1940,7 +1948,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                 break;
 
             case Oper_Substract:
-                if ((oper == Oper_Multiply || oper == Oper_Divide || oper == Oper_Exponent) && mPercentPending == false) {
+                if ((oper == Oper_Multiply || oper == Oper_Divide || oper == Oper_Exponent || oper == Oper_NthRoot) && mPercentPending == false) {
                     return;
                 }
 
@@ -1954,7 +1962,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                 break;
 
             case Oper_Multiply:
-                if (oper == Oper_Exponent) {
+                if (oper == Oper_Exponent || oper == Oper_NthRoot) {
                     return;
                 }
                 gAnswer = stripTrailingZeros(left * right);
@@ -1967,7 +1975,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                 break;
 
             case Oper_Divide:
-                if (oper == Oper_Exponent) {
+                if (oper == Oper_Exponent || oper == Oper_NthRoot) {
                     return;
                 }
                 if (right != 0.0d) {
@@ -1985,8 +1993,9 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                 }
                 break;
 
+            case Oper_NthRoot:
             case Oper_Exponent:
-                if (gInvActive) {
+                if (gInvActive || mOps[mOps_pos - 1] == Oper_NthRoot) {
                     if (right != 0.0d) {
                         gAnswer = stripTrailingZeros(Math.pow(left, 1.0d / right));
                     }
