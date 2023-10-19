@@ -198,8 +198,13 @@ class CalculatorView extends WatchUi.View {
                         }
                     }
                 }
-                drawInside(dc, width / 4 + (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 10, "x^2", false, Graphics.FONT_SMALL);
-                drawInside(dc, width - width / 4 - (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 11, "x^y", false, Graphics.FONT_SMALL);
+                if (gInvActive) {
+                    drawInside(dc, width / 4 + (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 10, "√x", false, Graphics.FONT_SMALL);
+                    drawInside(dc, width - width / 4 - (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 11, "y√x", false, Graphics.FONT_SMALL);
+                } else {
+                    drawInside(dc, width / 4 + (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 10, "x^2", false, Graphics.FONT_SMALL);
+                    drawInside(dc, width - width / 4 - (screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 8), height - height / 10, 11, "x^y", false, Graphics.FONT_SMALL);
+                }
                 break;
 
             case 4:

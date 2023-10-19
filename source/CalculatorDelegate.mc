@@ -678,7 +678,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 mOps[mOps_pos - 1] = op;
                             }
                             if (gInvActive) {
-                                gOpText = "v";
+                                gOpText = "√";
                             } else {
                                 gOpText = "^";
                             }
