@@ -22,4 +22,7 @@
 	<string id="setting_panelOrder">Panel order</string>
 	<string id="setting_vibrateOnTouch">Vibrate on touch</string>
 	<string id="setting_restoreOnLaunch">Restore unfinished calculations on next launch</string>
+	<string id="setting_calculationMode">Calculation mode</string>
+	<string id="setting_calcBEDMAS">BEDMAS</string>
+	<string id="setting_calcRPN">RPN</string>
 </strings>

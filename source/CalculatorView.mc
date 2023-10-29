@@ -24,6 +24,7 @@ var gOpText = null;
 var gInvActive = false;
 var gCurrentHistoryIndex = null;
 var gCurrentHistoryIncIndex = null;
+var gStackHistory = null;
 var gPanelOrder = [1, 2, 3, 4, 5, 6];
 var gPanelSize = 6;
 
@@ -166,8 +167,18 @@ class CalculatorView extends WatchUi.View {
                 break;
 
             case 2:
-                array1 = [" ( ", " ) ", "CA"];
-                array2 = [" + ", " - ", "DD"];
+                if (mDelegate.mCalcMode == 0) {
+                    array1 = [" ( ", " ) ", "CA"];
+                }
+                else {
+                    array1 = ["POP", "+/-", "CA"];
+                }
+                if (gDataEntry || mDelegate.mCalcMode == 0) {
+                    array2 = [" + ", " - ", "DD"];
+                }
+                else {
+                    array2 = [" + ", " - ", "SWAP"];
+                }
                 array3 = [" × ", " ÷ ", " % "];
                 array = [array1, array2, array3];
                 font = Graphics.FONT_SMALL;
@@ -299,18 +310,23 @@ class CalculatorView extends WatchUi.View {
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
             dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? width : width - (width / 3 - width / 6)), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, gText, Graphics.TEXT_JUSTIFY_RIGHT | Graphics.TEXT_JUSTIFY_VCENTER);
         }
-        else {
-            if (gMemory != null || gCurrentHistoryIncIndex != null || gDataView) {
-                dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-                if (gDataView) {
-                    dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, "D=" + (gDataViewPos + 1), Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
-                }
-                else if (gCurrentHistoryIncIndex == null) {
-                    dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, "M=" + stripTrailingZeros(gMemory), Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
-                }
-                else {
-                    dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, "H=" + gCurrentHistoryIncIndex, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
-                }
+        else if (mDelegate.mCalcMode == 1) {
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? width : width - (width / 3 - width / 6)), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, "S=" + mDelegate.mOps_pos, Graphics.TEXT_JUSTIFY_RIGHT | Graphics.TEXT_JUSTIFY_VCENTER);
+        }
+        if (gMemory != null || gCurrentHistoryIncIndex != null || gStackHistory != null || gDataView) {
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            if (gDataView) {
+                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, "D=" + (gDataViewPos + 1), Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+            }
+            else if (gCurrentHistoryIncIndex != null) {
+                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, "H=" + gCurrentHistoryIncIndex, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+            }
+            else if (gStackHistory != null) {
+                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, "S=" + gStackHistory, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+            }
+            else {
+                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, "M=" + stripTrailingZeros(gMemory), Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
             }
         }
     }

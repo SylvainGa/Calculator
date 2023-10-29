@@ -4,4 +4,5 @@
 	<property id="panelOrder" type="string">1,2,3,4,5,6</property>
 	<property id="vibrateOnTouch" type="boolean">false</property>
 	<property id="restoreOnLaunch" type="boolean">false</property>
+	<property id="calculationMode" type="number">0</property>
 </properties>

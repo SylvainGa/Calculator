@@ -56,6 +56,10 @@ If you like the widget, please consider [leaving a positive review](https://apps
 If you want to have the widget translated to your language, contact me through email or github.
 
 ## Changelog
+V1.7.0 Added the following
+  Inv transforms x^2 and x^y into √x and y√x
+  Allow the use of RPN (Reverse Polish Notation) to do calculation. Settable in the App Settings.
+  
 V1.6.0 Added the following
   Large and small numbers are now displayed/entered using exponents. The '.' button becomes a 'E' button once a decimal is entered so you can enter an exponent.
   As soon as an operation is entered (+, -, x, ÷ and CA), the screen autoreturns to the number panel so you cam right away start entering number without having to swipe.

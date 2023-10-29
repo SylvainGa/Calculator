@@ -18,4 +18,11 @@
     <setting propertyKey="@Properties.restoreOnLaunch" title="@Strings.setting_restoreOnLaunch">
 		<settingConfig type="boolean" required="true"/>
     </setting>
+
+    <setting propertyKey="@Properties.calculationMode" title="@Strings.setting_calculationMode">
+        <settingConfig type="list">
+            <listEntry value="0">@Strings.setting_calcBEDMAS</listEntry>
+            <listEntry value="1">@Strings.setting_calcRPN</listEntry>
+        </settingConfig>
+    </setting>
 </settings>

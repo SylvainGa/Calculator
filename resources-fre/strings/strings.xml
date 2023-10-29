@@ -21,4 +21,7 @@
 	<string id="setting_panelOrder">Ordre des panneaux</string>
 	<string id="setting_vibrateOnTouch">Vibration au touché</string>
 	<string id="setting_restoreOnLaunch">Récupérer les calculs non complétés au prochain lancement</string>
+	<string id="setting_calculationMode">Mode de calcules</string>
+	<string id="setting_calcBEDMAS">BEDMAS</string>
+	<string id="setting_calcRPN">RPN</string>
 </strings>

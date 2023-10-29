@@ -41,6 +41,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
     var mVibrateOnTouch;
     var mRestoreOnLaunch;
     var mExit;
+    var mCalcMode;
 
     // Financial var
     var mPresentValue;
@@ -131,10 +132,21 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
         }
         catch (e) {
             mVibrateOnTouch = false;
-            Properties.setValue("mVibrateOnTouch", false);
+            Properties.setValue("vibrateOnTouch", false);
         }
         if (mVibrateOnTouch == null) {
             mVibrateOnTouch = false;
+        }
+
+        try {
+            mCalcMode = Properties.getValue("calculationMode");
+        }
+        catch (e) {
+            mCalcMode = 0;
+            Properties.setValue("calculationMode", 0);
+        }
+        if (mCalcMode == null) {
+            mCalcMode = 0;
         }
     }
 
@@ -148,11 +160,13 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 		var y = coords[1];
         var array;
 
+        gStackHistory = null;
+
         gCurrentHistoryIndex = null;
         gCurrentHistoryIncIndex = null;
         gError = null;
         gOpText = null;
-        gDataEntry = false;
+        //gDataEntry = false;
         gDigitsChanged = false;
         
         mFinancialMissingPV = false;
@@ -201,6 +215,10 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
             switch (gPanelOrder[gGrid - 1]) {
                 case 1:
+                    if (gDataEntry == false && mOps[mOps_pos] != null) { // We have something in our operation queue but it's not from a number we are currently entering, erase it
+                        mOps[mOps_pos] = null;
+                    }
+
                     gDataEntry = true; // Our flag to tell the display code NOT to limit the number of decimals
 
                     array = ["", "7", "8", "9", "4", "5", "6", "1", "2", "3", "0", Oper_DOT ];
@@ -231,245 +249,13 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
                 case 2:
                     gText = null;
-
-                    switch (gHilight) {
-                        case 1: // ParenOpen
-                            // '(' must NOT be preceded by a 'number' (a string here)
-                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
-                                gError = WatchUi.loadResource(Rez.Strings.label_invalid);
-                                break;
-                            }
-                            // We just tag its place in the queue so ParenClose can do its thing
-                            mOps[mOps_pos] = Oper_ParenOpen;
-                            mOps_pos++;
-                            mOps[mOps_pos] = null;
-                            mParenCount++;
-                            gOpText = "(x" + mParenCount;
-                            break;
-
-                        case 2: // ParenClose
-                            if (mParenCount == 0) {
-                                break;
-                            }
-
-                            do {
-                                calcPrevious(Oper_ParenClose);
-                            } while (mOps_pos > 0 && mOps[mOps_pos - 1] != Oper_ParenOpen);
-
-                            if (mOps_pos > 0) {
-                                mOps[mOps_pos - 1] = mOps[mOps_pos];
-                                mOps_pos--;
-                            }
-                            mOps[mOps_pos + 1] = null;
-                            mParenCount--;
-                            if (mParenCount < 0) {
-                                mParenCount = 0;
-                            }
-                            gOpText = "(x" + mParenCount;
-                            break;
-
-                        case 3: // CA
-                            for (var i = 0; i < mOps.size(); i++) {
-                                mOps[i] = null;
-                            }
-                            mOps_pos = 0;
-                            mParenCount = 0;
-                            mUnaryPending = false;
-                            mPercentPending = false;
-                            gAnswer = null;
-                            gError = null;
-                            gInvActive = false;
-                            gText = null;
-                            switchToNumberPanel();
-                            break;
-
-                        case 4: // Add
-                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
-                            if (prefillResult == 0) { // Invalid number entered
-                                break;
-                            }
-                            else if (prefillResult == 1) { // Valid number entered
-                                calcPrevious(Oper_Add);
-                                mOps_pos++;
-                                mOps[mOps_pos] = Oper_Add;
-                                mOps_pos++;
-                                mOps[mOps_pos] = null;
-                            }
-                            else if (prefillResult == 2) { // Not a number, must be an operation (other than open parenthesise), replace it with this
-                                mOps[mOps_pos - 1] = Oper_Add;
-                            }
-                            gOpText = "+";
-                            switchToNumberPanel();
-                            break;
-
-                        case 5: // Substract (or negative number)
-                            // If we didn't type a number, use what's on the display but see within for a lone '-'
-                            if (mOps[mOps_pos] == null) {
-                                if (mOps_pos > 0 && mOps[mOps_pos - 1] instanceof Lang.Number || // But not if the previous item in our stack is an operation. If so, assume we want to enter a negative numner
-                                    mOps_pos == 0 && gAnswer == null) { // Or our stack is empty and so is our data entry. Assume we want to enter a negative number
-                                    gAnswer = "-";
-                                    mOps[mOps_pos] = gAnswer;
-                                    gDataEntry = true; // Our flag to tell the display code NOT to limit the number of decimals
-                                    switchToNumberPanel();
-                                    break;
-                                }
-                                else {
-                                    mOps[mOps_pos] = gAnswer;
-                                }
-                            }
-
-                            // We currently have something in the input queue
-                            if (mOps[mOps_pos] != null) {
-                                // And that something is a 'number' (shown as a string)
-                                if (mOps[mOps_pos] instanceof Lang.String) {
-                                    // If the last character of that string is a 'E', we want a negative exponent
-                                    if (mOps[mOps_pos].substring(mOps[mOps_pos].length() - 1, mOps[mOps_pos].length()).equals("E")) {
-                                        mOps[mOps_pos] += "-";
-                                        gAnswer = mOps[mOps_pos];
-                                        gDataEntry = true; // Our flag to tell the display code NOT to limit the number of decimals
-                                        switchToNumberPanel();
-                                        break;
-                                    }
-                                    calcPrevious(Oper_Substract);
-                                    mOps_pos++;
-                                    mOps[mOps_pos] = Oper_Substract;
-                                    mOps_pos++;
-                                    mOps[mOps_pos] = null;
-                                }
-                                // Not a number, must be an operation (other than open parenthesise), replace it with this
-                                else if (mOps_pos > 0 && mOps[mOps_pos - 1] != Oper_ParenOpen) {
-                                    mOps[mOps_pos - 1] = Oper_Substract;
-                                }
-                                gOpText = "-";
-                            }
-                            switchToNumberPanel();
-                            break;
-
-                        case 6: // DD
-                            gDataEntry = true; // Our flag to tell the display code NOT to limit the number of decimals
-
-                            if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String && mOps[mOps_pos].length() > 0) {
-                                mOps[mOps_pos] = mOps[mOps_pos].substring(0, mOps[mOps_pos].length() - 1);
-
-                                if (mOps[mOps_pos].length() == 0) {
-                                    mOps[mOps_pos] = null;
-                                }
-                            }
-
-                            if (mOps[mOps_pos] == null) {
-                                gAnswer = null;
-                            }
-                            else {
-                                gAnswer = mOps[mOps_pos];
-                            }
-                            break;
-
-                        case 7: // Multiply
-                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
-                            if (prefillResult == 0) { // Invalid number entered
-                                break;
-                            }
-                            else if (prefillResult == 1) { // Valid number entered
-                                calcPrevious(Oper_Multiply);
-                                mOps_pos++;
-                                mOps[mOps_pos] = Oper_Multiply;
-                                mOps_pos++;
-                                mOps[mOps_pos] = null;
-                            }
-                            else if (prefillResult == 2) { // Not a number, must be an operation (other than open parenthesise), replace it with this
-                                mOps[mOps_pos - 1] = Oper_Multiply;
-                            }
-                            gOpText = "×";
-                            switchToNumberPanel();
-                            break;
-
-                        case 8: // Divide
-                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
-                            if (prefillResult == 0) { // Invalid number entered
-                                break;
-                            }
-                            else if (prefillResult == 1) { // Valid number entered
-                                calcPrevious(Oper_Divide);
-                                mOps_pos++;
-                                mOps[mOps_pos] = Oper_Divide;
-                                mOps_pos++;
-                                mOps[mOps_pos] = null;
-                            }
-                            else if (prefillResult == 2) { // Not a number, must be an operation (other than open parenthesise), replace it with this
-                                mOps[mOps_pos - 1] = Oper_Divide;
-                            }
-                            gOpText = "÷";
-                            switchToNumberPanel();
-                            break;
-
-                        case 9: // Percent
-                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
-                            if (prefillResult == 0) { // Invalid number entered
-                                break;
-                            }
-                            else if (prefillResult == 1) { // Valid number entered
-                                var double = getDouble(mOps[mOps_pos]);
-                                if (double == null) {
-                                    gError = WatchUi.loadResource(Rez.Strings.label_invalid);
-                                    break;
-                                }
-
-                                gAnswer = stripTrailingZeros(double / 100.0d);
-                                mOps[mOps_pos] = null;
-
-                                if (mOps_pos > 1 && mOps[mOps_pos - 2] instanceof Lang.String && mOps[mOps_pos - 1] instanceof Lang.Number && (mOps[mOps_pos - 1] == Oper_Add || mOps[mOps_pos - 1] == Oper_Substract)) {
-                                    // Percentage operation with an addition or substraction just before
-                                    var left = getDouble(mOps[mOps_pos - 2]);
-                                    if (left == null) {
-                                        gError = WatchUi.loadResource(Rez.Strings.label_invalid);
-                                        break;
-                                    }
-
-                                    gAnswer = stripTrailingZeros(left * double / 100.0d);
-                                    mOps[mOps_pos] = null;
-                                }
-                                mUnaryPending = true;
-                                mPercentPending = true;
-                            }
-                            gOpText = "%";
-                            break;
-
-                        case 10: // MS
-                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
-                            if (prefillResult == 0) { // Invalid number entered
-                                break;
-                            }
-                            else if (prefillResult == 1) { // Valid number entered
-                                var double = mOps[mOps_pos].toDouble();
-
-                                if (double != 0.0d) {
-                                    // Empty? Stock it
-                                    if (gMemory == null) {
-                                        gMemory = gAnswer;
-                                    }
-                                    // Otherwise add to it
-                                    else {
-                                        gMemory = stripTrailingZeros(gMemory.toDouble() + double);
-                                    }
-                                    Storage.setValue("Memory", gMemory);
-                                }
-                                // Storing 0 is like erasing it
-                                else {
-                                    gMemory = null;
-                                    Storage.deleteValue("Memory");
-                                }
-                            }
-                            mOps[mOps_pos] = null;
-
-                            break;
-
-                        case 11: // MR
-                            if (gMemory != null) {
-                                gAnswer = gMemory;
-                                mUnaryPending = true;
-                                mOps[mOps_pos] = null;
-                            }
-                            break;
+                    
+                    if (mCalcMode == 0) {
+                        gDataEntry = false;
+                        doBEDMAS();
+                    }
+                    else {
+                        doRPN();
                     }
                     break;
 
@@ -486,6 +272,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             break;
 
                         case 3: // Pi
+                            gDataEntry = false;
                             gAnswer = stripTrailingZeros(Math.PI);
                             mUnaryPending = true;
                             mOps[mOps_pos] = gAnswer;
@@ -494,6 +281,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         case 4: // SIN
                         case 5: // COSIN
                         case 6: // TANGEANT
+                            gDataEntry = false;
                             prefillResult = prefillmOps();  // Use gAnswer in certain conditions
                             if (prefillResult == 0) { // Invalid number entered
                                 break;
@@ -522,7 +310,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                             mUnaryPending = true;
                                         }
 
-                                        mOps[mOps_pos] = null;
+                                        mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                                     }
                                     else {
                                         var rad = (gDegRad == Degree ? Math.toRadians(double) : double);
@@ -546,7 +335,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                             mUnaryPending = true;
                                         }
 
-                                        mOps[mOps_pos] = null;
+                                        mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
                                     }
                                 }
                                 catch (e) {
@@ -560,6 +349,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
                         case 7: // Log
                         case 8: // Ln
+                            gDataEntry = false;
                             prefillResult = prefillmOps();  // Use gAnswer in certain conditions
                             if (prefillResult == 0) { // Invalid number entered
                                 break;
@@ -592,7 +382,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                         mUnaryPending = true;
                                     }
 
-                                    mOps[mOps_pos] = null;
+                                    mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                                }
                                 catch (e) {
                                     gError = WatchUi.loadResource(Rez.Strings.label_invalid);
@@ -604,6 +395,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             break;
 
                         case 9: // 1/x
+                            gDataEntry = false;
                             prefillResult = prefillmOps();  // Use gAnswer in certain conditions
                             if (prefillResult == 0) { // Invalid number entered
                                 break;
@@ -613,7 +405,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 if (double != 0.0d) {
                                     gAnswer = stripTrailingZeros(1.0d / double);
                                     mUnaryPending = true;
-                                    mOps[mOps_pos] = null;
+                                    mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                                 }
                                 else {
                                     gError = WatchUi.loadResource(Rez.Strings.label_divide0);
@@ -625,6 +418,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             break;
 
                         case 10: // x^2
+                            gDataEntry = false;
                             prefillResult = prefillmOps();  // Use gAnswer in certain conditions
                             if (prefillResult == 0) { // Invalid number entered
                                 break;
@@ -647,7 +441,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                         mUnaryPending = true;
                                     }
 
-                                    mOps[mOps_pos] = null;
+                                    mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                                 }
                                 catch (e) {
                                     gError = WatchUi.loadResource(Rez.Strings.label_invalid);
@@ -659,28 +454,75 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             break;
 
                         case 11: // x^y
-                            prefillResult = prefillmOps();  // Use gAnswer in certain conditions
-                            var op = Oper_Exponent;
-                            if (gInvActive) {
-                                op = Oper_NthRoot;
+                            gDataEntry = false;
+                            if (mCalcMode == 0) { // BEDMAS
+                                prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                                var op = Oper_Exponent;
+                                if (gInvActive) {
+                                    op = Oper_NthRoot;
+                                }
+                                if (prefillResult == 0) { // Invalid number entered
+                                    break;
+                                }
+                                else if (prefillResult == 1) { // Valid number entered
+                                    calcPrevious(op);
+                                    mOps_pos++;
+                                    mOps[mOps_pos] = op;
+                                    mOps_pos++;
+                                    mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+                                }
+                                else if (prefillResult == 2) { // Not a number, must be an operation (other than open parenthesise), replace it with this
+                                    mOps[mOps_pos - 1] = op;
+                                }
+                                if (gInvActive) {
+                                    gOpText = "√";
+                                } else {
+                                    gOpText = "^";
+                                }
                             }
-                            if (prefillResult == 0) { // Invalid number entered
-                                break;
-                            }
-                            else if (prefillResult == 1) { // Valid number entered
-                                calcPrevious(op);
-                                mOps_pos++;
-                                mOps[mOps_pos] = op;
-                                mOps_pos++;
-                                mOps[mOps_pos] = null;
-                            }
-                            else if (prefillResult == 2) { // Not a number, must be an operation (other than open parenthesise), replace it with this
-                                mOps[mOps_pos - 1] = op;
-                            }
-                            if (gInvActive) {
-                                gOpText = "√";
-                            } else {
-                                gOpText = "^";
+                            else { // RPN
+                                if (mOps[mOps_pos] == null && mOps_pos > 0) { // No value recently entered, use last on stack unless our stack is empty
+                                    mOps_pos--;
+                                }
+
+                                if (mOps_pos > 0) {
+                                    var left = mOps[mOps_pos - 1];
+                                    var right = mOps[mOps_pos];
+                                    if (right == null) {
+                                        right = gAnswer;
+                                        if (right == null) {
+                                            right = "0.";
+                                        }
+                                    }
+
+                                    left = getDouble(left);
+                                    right = getDouble(right);
+                                    if (left == null || right == null) {
+                                        gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                                        return;
+                                    }
+
+                                    if (gInvActive) {
+                                        if (right != 0.0d) {
+                                            gAnswer = stripTrailingZeros(Math.pow(left, 1.0d / right));
+                                        }
+                                        else {
+                                            gError = WatchUi.loadResource(Rez.Strings.label_divide0);
+                                            clearStack();
+                                            return;
+                                        }
+                                    }
+                                    else {
+                                        gAnswer = stripTrailingZeros(Math.pow(left, right));
+                                    }
+
+                                    mOps[mOps_pos - 1] = gAnswer;
+                                    mOps[mOps_pos] = null;
+                                }
+                                else { // Needs two entry 
+                                    gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                                    return;
+                                }
                             }
                             gInvActive = false;
                             switchToNumberPanel();
@@ -690,6 +532,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                     break;
 
                 case 4:
+                    gDataEntry = false;
                     gText = null;
 
                     switch (gHilight) {
@@ -719,7 +562,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     gAnswer = stripTrailingZeros(double);
                                 }
                                 mUnaryPending = true;
-                                mOps[mOps_pos] = null;
+                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                             }
 
                             gInvActive = false;
@@ -740,7 +584,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     gAnswer = stripTrailingZeros(double * convUnit);
                                 }
                                 mUnaryPending = true;
-                                mOps[mOps_pos] = null;
+                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                             }
 
                             gInvActive = false;
@@ -760,7 +605,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     gAnswer = stripTrailingZeros(double * 29.5735d);
                                 }
                                 mUnaryPending = true;
-                                mOps[mOps_pos] = null;
+                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                             }
 
                             gInvActive = false;
@@ -781,7 +627,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     gAnswer = stripTrailingZeros(double * convUnit);
                                 }
                                 mUnaryPending = true;
-                                mOps[mOps_pos] = null;
+                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                             }
 
                             gInvActive = false;
@@ -801,7 +648,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     gAnswer = stripTrailingZeros(double * 1.60934d);
                                 }
                                 mUnaryPending = true;
-                                mOps[mOps_pos] = null;
+                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                             }
 
                             gInvActive = false;
@@ -821,7 +669,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     gAnswer = stripTrailingZeros(double * 30.48d);
                                 }
                                 mUnaryPending = true;
-                                mOps[mOps_pos] = null;
+                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                             }
 
                             gInvActive = false;
@@ -841,7 +690,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     gAnswer = stripTrailingZeros(double * 0.453592d);
                                 }
                                 mUnaryPending = true;
-                                mOps[mOps_pos] = null;
+                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                             }
 
                             gInvActive = false;
@@ -861,7 +711,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     gAnswer = stripTrailingZeros(double * 1.60934d);
                                 }
                                 mUnaryPending = true;
-                                mOps[mOps_pos] = null;
+                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                             }
 
                             gInvActive = false;
@@ -881,7 +732,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     gAnswer = stripTrailingZeros(double * 4046.86d);
                                 }
                                 mUnaryPending = true;
-                                mOps[mOps_pos] = null;
+                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                             }
 
                             gInvActive = false;
@@ -889,6 +741,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                     }
                     break;
                 case 5:
+                    gDataEntry = false;
                     gText = null;
 
                     switch (gHilight) {
@@ -908,7 +761,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 gAnswer = stripTrailingZeros(mPresentValue);
                                 mRecall = false;
                                 mUnaryPending = true;
-                                mOps[mOps_pos] = null;
+                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                                 break;
                             }
                             if (mCalc) {
@@ -927,7 +781,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (mPresentValue == 0.0d) {
                                 mPresentValue = null;
                             }
-                            mOps[mOps_pos] = null;
+                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                             break;
 
 
@@ -936,7 +791,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 gAnswer = stripTrailingZeros(mFutureValue);
                                 mRecall = false;
                                 mUnaryPending = true;
-                                mOps[mOps_pos] = null;
+                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                                 break;
                             }
                             if (mCalc) {
@@ -954,7 +810,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (mFutureValue == 0.0d) {
                                 mFutureValue = null;
                             }
-                            mOps[mOps_pos] = null;
+                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                             break;
 
                         case 6: // DEP/PMT
@@ -962,7 +819,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 gAnswer = stripTrailingZeros(mPayment);
                                 mRecall = false;
                                 mUnaryPending = true;
-                                mOps[mOps_pos] = null;
+                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                                 break;
                             }
                             if (mCalc) {
@@ -980,7 +838,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (mPayment == 0.0d) {
                                 mPayment = null;
                             }
-                            mOps[mOps_pos] = null;
+                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                             break;
 
                         case 7: // YEARS
@@ -988,7 +847,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 gAnswer = stripTrailingZeros(mYears);
                                 mRecall = false;
                                 mUnaryPending = true;
-                                mOps[mOps_pos] = null;
+                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                                 break;
                             }
                             if (mCalc) {
@@ -1006,7 +866,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (mYears == 0.0d) {
                                 mYears = null;
                             }
-                            mOps[mOps_pos] = null;
+                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                             break;
 
                         case 8: // I/Y
@@ -1016,7 +877,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 }
                                 else {
                                     gAnswer = "0.";
-                                    mOps[mOps_pos] = null;
+                                    mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                                 }
                                 mUnaryPending = true;
                                 mRecall = false;
@@ -1037,7 +899,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (mInterestPerYear == 0.0d) {
                                 mInterestPerYear = null;
                             }
-                            mOps[mOps_pos] = null;
+                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                             break;
 
                         case 9: // P/Y
@@ -1045,7 +908,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 gAnswer = stripTrailingZeros(mPeriodsPerYear);
                                 mRecall = false;
                                 mUnaryPending = true;
-                                mOps[mOps_pos] = null;
+                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                                 break;
                             }
                             if (mCalc) {
@@ -1063,7 +927,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (mPeriodsPerYear == 0.0d) {
                                 mPeriodsPerYear = null;
                             }
-                            mOps[mOps_pos] = null;
+                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                             break;
 
                         case 10: // Recall
@@ -1078,6 +943,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                     break;
                 
                 case 6:
+                    gDataEntry = false;
                     gText = null;
 
                     if (gHilight != 8) {
@@ -1096,7 +962,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             else {
                                 gError = WatchUi.loadResource(Rez.Strings.label_noData);
                             }
-                            mOps[mOps_pos] = null;
+                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                             break;
 
                         case 2: // SSDEV
@@ -1116,7 +983,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             else {
                                 gError = WatchUi.loadResource(Rez.Strings.label_noData);
                             }
-                            mOps[mOps_pos] = null;
+                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                             break;
 
                         case 3: // PSDEV
@@ -1136,7 +1004,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             else {
                                 gError = WatchUi.loadResource(Rez.Strings.label_noData);
                             }
-                            mOps[mOps_pos] = null;
+                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                             break;
 
                         case 4: // MEDIAN
@@ -1161,7 +1030,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             else {
                                 gError = WatchUi.loadResource(Rez.Strings.label_noData);
                             }
-                            mOps[mOps_pos] = null;
+                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                             break;
 
                         case 5: // VARIANCE
@@ -1180,7 +1050,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             else {
                                 gError = WatchUi.loadResource(Rez.Strings.label_noData);
                             }
-                            mOps[mOps_pos] = null;
+                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                             break;
 
                         case 6: // MODE
@@ -1216,7 +1087,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             else {
                                 gError = WatchUi.loadResource(Rez.Strings.label_noData);
                             }
-                            mOps[mOps_pos] = null;
+                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                             break;
 
                         case 7: // RANGE
@@ -1234,7 +1106,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             else {
                                 gError = WatchUi.loadResource(Rez.Strings.label_noData);
                             }
-                            mOps[mOps_pos] = null;
+                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                             break;
 
                         case 8: // View
@@ -1283,7 +1156,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
                             saveDataPoints();
 
-                            mOps[mOps_pos] = null;
+                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                             break;
 
                         case 11: // Del
@@ -1329,7 +1203,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
                             saveDataPoints();
 
-                            mOps[mOps_pos] = null;
+                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+
                             break;
                     }
                     break;
@@ -1350,60 +1225,52 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                 }
             }
         }
-        else {
-            if (mRestoreOnLaunch == true) {
-                Storage.deleteValue("pendingOps");
-                Storage.deleteValue("mOps_pos");
-                Storage.deleteValue("gAnswer");
-            }
-            gText = null;
+        else { // Pressed on the Result display means '=' for BEDMAS and 'Enter' for RPN
+            gDataEntry = false;
 
-            if (mOps[mOps_pos] == null) {
-                mOps[mOps_pos] = gAnswer;
-            }
-            if (mOps[mOps_pos] != null) {
-                calcPrevious(Oper_Equal);
-                gAnswer = stripTrailingZeros(mOps[mOps_pos]);
-                // See if we have empty slots for our history
-                if (mCountHistory) {
-                    var count = 0;
-                    for (var i = 0; i < mHistorySize; i++) {
-                        if (Storage.getValue("history_" + i) != null) {
-                            count++;
-                        }
-                    }
+            if (mCalcMode == 0) { // BEDMAS do '=' sign
+                if (mRestoreOnLaunch == true) {
+                    Storage.deleteValue("pendingOps");
+                    Storage.deleteValue("mOps_pos");
+                    Storage.deleteValue("gAnswer");
+                }
+                gText = null;
 
-                    // If we have less history value than our requested size, add to the end
-                    if (count < mHistorySize) {
-                        gCurrentHistoryIndex = count;
+                if (mOps[mOps_pos] == null) {
+                    mOps[mOps_pos] = gAnswer;
+                }
+                if (mOps[mOps_pos] != null) {
+                    calcPrevious(Oper_Equal);
+                    gAnswer = stripTrailingZeros(mOps[mOps_pos]);
+
+                    addToHistory(); // Add gAnswer to our history list
+
+                    mParenCount = 0;
+                    mUnaryPending = false;
+                    mPercentPending = false;
+                    mOps_pos = 0;
+                    mOps[mOps_pos] = null;
+                    gOpText = "=";
+                }
+            }
+            else { // RPN, do 'Enter'
+                if (mOps[mOps_pos] == null) { // If we have nothing, try to use gAnswer, otherwise, push 0.
+                    if (gDataEntry == false && gAnswer != null) { // We have nothing in our stack and we are not entering a number, store gAnswer in our history
+                        addToHistory(); // Add gAnswer to our history list
                     }
-                    // Otherwise use the current position and don't count again
                     else {
-                        mCountHistory = false;
-                        gCurrentHistoryIndex = Storage.getValue("HistoryIndex");
+                        if (gAnswer != null) {
+                            mOps[mOps_pos] = gAnswer;
+                        }
+                        else {
+                            mOps[mOps_pos] = "0.";
+                        }
+                        mOps_pos++;
                     }
                 }
                 else {
-                    gCurrentHistoryIndex = Storage.getValue("HistoryIndex");
+                    mOps_pos++;
                 }
-
-                if (gCurrentHistoryIndex == null || gCurrentHistoryIndex >= mHistorySize) {
-                    gCurrentHistoryIndex = 0;
-                }
-                Storage.setValue("history_" + gCurrentHistoryIndex, gAnswer);
-                gCurrentHistoryIndex++;
-                if (gCurrentHistoryIndex >= mHistorySize) {
-                    gCurrentHistoryIndex = 0;
-                }
-                Storage.setValue("HistoryIndex", gCurrentHistoryIndex);
-                gCurrentHistoryIncIndex = null;
-
-                mParenCount = 0;
-                mUnaryPending = false;
-                mPercentPending = false;
-                mOps_pos = 0;
-                mOps[mOps_pos] = null;
-                gOpText = "=";
             }
         }
 
@@ -1437,6 +1304,643 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
         return true;
     }
 
+    function addToHistory() {
+        // See if we have empty slots for our history
+        if (mCountHistory) {
+            var count = 0;
+            for (var i = 0; i < mHistorySize; i++) {
+                if (Storage.getValue("history_" + i) != null) {
+                    count++;
+                }
+            }
+
+            // If we have less history value than our requested size, add to the end
+            if (count < mHistorySize) {
+                gCurrentHistoryIndex = count;
+            }
+            // Otherwise use the current position and don't count again
+            else {
+                mCountHistory = false;
+                gCurrentHistoryIndex = Storage.getValue("HistoryIndex");
+            }
+        }
+        else {
+            gCurrentHistoryIndex = Storage.getValue("HistoryIndex");
+        }
+
+        if (gCurrentHistoryIndex == null || gCurrentHistoryIndex >= mHistorySize) {
+            gCurrentHistoryIndex = 0;
+        }
+        Storage.setValue("history_" + gCurrentHistoryIndex, gAnswer);
+        gCurrentHistoryIndex++;
+        if (gCurrentHistoryIndex >= mHistorySize) {
+            gCurrentHistoryIndex = 0;
+        }
+        Storage.setValue("HistoryIndex", gCurrentHistoryIndex);
+        gCurrentHistoryIncIndex = null;
+    }
+
+    function doBEDMAS() {
+        var prefillResult;
+    
+        switch (gHilight) {
+            case 1: // ParenOpen
+                // '(' must NOT be preceded by a 'number' (a string here)
+                if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String) {
+                    gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                    break;
+                }
+                // We just tag its place in the queue so ParenClose can do its thing
+                mOps[mOps_pos] = Oper_ParenOpen;
+                mOps_pos++;
+                mOps[mOps_pos] = null;
+                mParenCount++;
+                gOpText = "(x" + mParenCount;
+                break;
+
+            case 2: // ParenClose
+                if (mParenCount == 0) {
+                    break;
+                }
+
+                do {
+                    calcPrevious(Oper_ParenClose);
+                } while (mOps_pos > 0 && mOps[mOps_pos - 1] != Oper_ParenOpen);
+
+                if (mOps_pos > 0) {
+                    mOps[mOps_pos - 1] = mOps[mOps_pos];
+                    mOps_pos--;
+                }
+                mOps[mOps_pos + 1] = null;
+                mParenCount--;
+                if (mParenCount < 0) {
+                    mParenCount = 0;
+                }
+                gOpText = "(x" + mParenCount;
+                break;
+
+            case 3: // CA
+                for (var i = 0; i < mOps.size(); i++) {
+                    mOps[i] = null;
+                }
+                mOps_pos = 0;
+                mParenCount = 0;
+                mUnaryPending = false;
+                mPercentPending = false;
+                gAnswer = null;
+                gError = null;
+                gInvActive = false;
+                gText = null;
+                switchToNumberPanel();
+                break;
+
+            case 4: // Add
+                prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                if (prefillResult == 0) { // Invalid number entered
+                    break;
+                }
+                else if (prefillResult == 1) { // Valid number entered
+                    calcPrevious(Oper_Add);
+                    mOps_pos++;
+                    mOps[mOps_pos] = Oper_Add;
+                    mOps_pos++;
+                    mOps[mOps_pos] = null;
+                }
+                else if (prefillResult == 2) { // Not a number, must be an operation (other than open parenthesise), replace it with this
+                    mOps[mOps_pos - 1] = Oper_Add;
+                }
+                gOpText = "+";
+                switchToNumberPanel();
+                break;
+
+            case 5: // Substract (or negative number)
+                // If we didn't type a number, use what's on the display but see within for a lone '-'
+                if (mOps[mOps_pos] == null) {
+                    if (mOps_pos > 0 && mOps[mOps_pos - 1] instanceof Lang.Number || // But not if the previous item in our stack is an operation. If so, assume we want to enter a negative numner
+                        mOps_pos == 0 && gAnswer == null) { // Or our stack is empty and so is our data entry. Assume we want to enter a negative number
+                        gAnswer = "-";
+                        mOps[mOps_pos] = gAnswer;
+                        gDataEntry = true; // Our flag to tell the display code NOT to limit the number of decimals
+                        switchToNumberPanel();
+                        break;
+                    }
+                    else {
+                        mOps[mOps_pos] = gAnswer;
+                    }
+                }
+
+                // We currently have something in the input queue
+                if (mOps[mOps_pos] != null) {
+                    // And that something is a 'number' (shown as a string)
+                    if (mOps[mOps_pos] instanceof Lang.String) {
+                        // If the last character of that string is a 'E', we want a negative exponent
+                        if (mOps[mOps_pos].substring(mOps[mOps_pos].length() - 1, mOps[mOps_pos].length()).equals("E")) {
+                            mOps[mOps_pos] += "-";
+                            gAnswer = mOps[mOps_pos];
+                            gDataEntry = true; // Our flag to tell the display code NOT to limit the number of decimals
+                            switchToNumberPanel();
+                            break;
+                        }
+                        calcPrevious(Oper_Substract);
+                        mOps_pos++;
+                        mOps[mOps_pos] = Oper_Substract;
+                        mOps_pos++;
+                        mOps[mOps_pos] = null;
+                    }
+                    // Not a number, must be an operation (other than open parenthesise), replace it with this
+                    else if (mOps_pos > 0 && mOps[mOps_pos - 1] != Oper_ParenOpen) {
+                        mOps[mOps_pos - 1] = Oper_Substract;
+                    }
+                    gOpText = "-";
+                }
+                switchToNumberPanel();
+                break;
+
+            case 6: // DD
+                gDataEntry = true; // Our flag to tell the display code NOT to limit the number of decimals
+
+                if (mOps[mOps_pos] != null && mOps[mOps_pos] instanceof Lang.String && mOps[mOps_pos].length() > 0) {
+                    mOps[mOps_pos] = mOps[mOps_pos].substring(0, mOps[mOps_pos].length() - 1);
+
+                    if (mOps[mOps_pos].length() == 0) {
+                        mOps[mOps_pos] = null;
+                    }
+                }
+
+                if (mOps[mOps_pos] == null) {
+                    gAnswer = null;
+                }
+                else {
+                    gAnswer = mOps[mOps_pos];
+                }
+                break;
+
+            case 7: // Multiply
+                prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                if (prefillResult == 0) { // Invalid number entered
+                    break;
+                }
+                else if (prefillResult == 1) { // Valid number entered
+                    calcPrevious(Oper_Multiply);
+                    mOps_pos++;
+                    mOps[mOps_pos] = Oper_Multiply;
+                    mOps_pos++;
+                    mOps[mOps_pos] = null;
+                }
+                else if (prefillResult == 2) { // Not a number, must be an operation (other than open parenthesise), replace it with this
+                    mOps[mOps_pos - 1] = Oper_Multiply;
+                }
+                gOpText = "×";
+                switchToNumberPanel();
+                break;
+
+            case 8: // Divide
+                prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                if (prefillResult == 0) { // Invalid number entered
+                    break;
+                }
+                else if (prefillResult == 1) { // Valid number entered
+                    calcPrevious(Oper_Divide);
+                    mOps_pos++;
+                    mOps[mOps_pos] = Oper_Divide;
+                    mOps_pos++;
+                    mOps[mOps_pos] = null;
+                }
+                else if (prefillResult == 2) { // Not a number, must be an operation (other than open parenthesise), replace it with this
+                    mOps[mOps_pos - 1] = Oper_Divide;
+                }
+                gOpText = "÷";
+                switchToNumberPanel();
+                break;
+
+            case 9: // Percent
+                prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                if (prefillResult == 0) { // Invalid number entered
+                    break;
+                }
+                else if (prefillResult == 1) { // Valid number entered
+                    var double = getDouble(mOps[mOps_pos]);
+                    if (double == null) {
+                        gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                        break;
+                    }
+
+                    gAnswer = stripTrailingZeros(double / 100.0d);
+                    mOps[mOps_pos] = null;
+
+                    if (mOps_pos > 1 && mOps[mOps_pos - 2] instanceof Lang.String && mOps[mOps_pos - 1] instanceof Lang.Number && (mOps[mOps_pos - 1] == Oper_Add || mOps[mOps_pos - 1] == Oper_Substract)) {
+                        // Percentage operation with an addition or substraction just before
+                        var left = getDouble(mOps[mOps_pos - 2]);
+                        if (left == null) {
+                            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                            break;
+                        }
+
+                        gAnswer = stripTrailingZeros(left * double / 100.0d);
+                        mOps[mOps_pos] = null;
+                    }
+                    mUnaryPending = true;
+                    mPercentPending = true;
+                }
+                gOpText = "%";
+                break;
+
+            case 10: // MS
+                prefillResult = prefillmOps();  // Use gAnswer in certain conditions
+                if (prefillResult == 0) { // Invalid number entered
+                    break;
+                }
+                else if (prefillResult == 1) { // Valid number entered
+                    var double = mOps[mOps_pos].toDouble();
+
+                    if (double != 0.0d) {
+                        // Empty? Stock it
+                        if (gMemory == null) {
+                            gMemory = mOps[mOps_pos];
+                        }
+                        // Otherwise add to it
+                        else {
+                            gMemory = stripTrailingZeros(gMemory.toDouble() + double);
+                        }
+                        Storage.setValue("Memory", gMemory);
+                    }
+                    // Storing 0 is like erasing it
+                    else {
+                        gMemory = null;
+                        Storage.deleteValue("Memory");
+                    }
+                }
+                mOps[mOps_pos] = null;
+
+                break;
+
+            case 11: // MR
+                if (gMemory != null) {
+                    gAnswer = gMemory;
+                    mUnaryPending = true;
+                    mOps[mOps_pos] = null;
+                }
+                break;
+        }
+    }
+
+    function doRPN() {
+        var double;
+        var oldDataEntry = gDataEntry; // Since only DD/SWAP needs to see this, clear gDataEntry now and check oldDataEntry in DD/SWAP
+        gDataEntry = false;
+
+        switch (gHilight) {
+            case 1: // Pop from stack
+                if (mOps_pos > 0) { // No value recently entered, use last on stack unless our stack is empty
+                    mOps_pos--;
+                }
+                mOps[mOps_pos] = null;
+                switchToNumberPanel();
+                break;
+
+            case 2: // Change sign
+                if (mOps[mOps_pos] == null && mOps_pos > 0) { // No value recently entered, use last on stack unless our stack is empty
+                    mOps_pos--;
+                }
+
+                double = mOps[mOps_pos];
+                if (double == null) {
+                    double = gAnswer;
+                    if (double == null) {
+                        double = "0.";
+                    }
+                }
+                double = getDouble(double);
+                if (double == null) {
+                    gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                    return;
+                }
+                gAnswer = stripTrailingZeros(-double);
+                mOps[mOps_pos] = gAnswer;
+                mOps_pos++;
+
+                switchToNumberPanel();
+                break;
+
+            case 3: // CA
+                for (var i = 0; i < mOps.size(); i++) {
+                    mOps[i] = null;
+                }
+                mOps_pos = 0;
+                mParenCount = 0;
+                mUnaryPending = false;
+                mPercentPending = false;
+                gAnswer = null;
+                gError = null;
+                gInvActive = false;
+                gText = null;
+                switchToNumberPanel();
+                break;
+
+            case 4: // Add
+                if (mOps[mOps_pos] == null && mOps_pos > 0) { // No value recently entered, use last on stack unless our stack is empty
+                    mOps_pos--;
+                }
+
+                if (mOps_pos > 0) {
+                    var left = mOps[mOps_pos - 1];
+                    var right = mOps[mOps_pos];
+                    if (right == null) {
+                        right = gAnswer;
+                        if (right == null) {
+                            right = "0.";
+                        }
+                    }
+
+                    left = getDouble(left);
+                    right = getDouble(right);
+                    if (left == null || right == null) {
+                        gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                        return;
+                    }
+
+                    gAnswer = stripTrailingZeros(left + right);
+                    mOps[mOps_pos] = null;
+                    mOps[mOps_pos - 1] = gAnswer;
+                }
+                else { // Only one data on stack?, act as if Enter was pressed (but don't store in History)
+                    if (mOps[mOps_pos] != null) {
+                        mOps_pos++;
+                    }
+                }
+                switchToNumberPanel();
+                break;
+
+            case 5: // Substract
+                if (mOps[mOps_pos] == null && mOps_pos > 0) { // No value recently entered, use last on stack unless our stack is empty
+                    mOps_pos--;
+                }
+
+                if (mOps_pos > 0) {
+                    var left = mOps[mOps_pos - 1];
+                    var right = mOps[mOps_pos];
+                    if (right == null) {
+                        right = gAnswer;
+                        if (right == null) {
+                            right = "0.";
+                        }
+                    }
+
+                    left = getDouble(left);
+                    right = getDouble(right);
+                    if (left == null || right == null) {
+                        gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                        return;
+                    }
+
+                    gAnswer = stripTrailingZeros(left - right);
+                    mOps[mOps_pos] = null;
+                    mOps[mOps_pos - 1] = gAnswer;
+                }
+                else { // Only one data on stack?, act as if Enter was pressed after changing its sign (but don't store in History)
+                    if (mOps[mOps_pos] != null) {
+                        var right = mOps[mOps_pos];
+                        right = getDouble(right);
+                        if (right == null) {
+                            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                            return;
+                        }
+                        gAnswer = stripTrailingZeros(-right);
+                        mOps[mOps_pos] = gAnswer;
+
+                        mOps_pos++;
+                    }
+                }
+                switchToNumberPanel();
+                break;
+
+            case 6: // DD or SWAP
+                if (oldDataEntry == true) { // Deleting a digit
+                    gDataEntry = true;
+                    if (mOps[mOps_pos] instanceof Lang.String && mOps[mOps_pos].length() > 0) {
+                        mOps[mOps_pos] = mOps[mOps_pos].substring(0, mOps[mOps_pos].length() - 1);
+
+                        if (mOps[mOps_pos].length() == 0) {
+                            mOps[mOps_pos] = null;
+                        }
+                    }
+
+                    if (mOps[mOps_pos] == null) {
+                        gAnswer = null;
+                    }
+                    else {
+                        gAnswer = mOps[mOps_pos];
+                    }
+                }
+                else { // Swapping the stack
+                    if (mOps[mOps_pos] == null) {
+                        if (mOps_pos > 1) { // Swap the two stack entry
+                            var current = mOps[mOps_pos - 1];
+                            var previous = mOps[mOps_pos - 2];
+
+                            mOps[mOps_pos - 2] = current;
+                            mOps[mOps_pos - 1] = previous;
+
+                            gAnswer = previous;
+                        }
+                        else if (mOps_pos == 1 && gAnswer != null) { // Swap the stack entry with gAnswer (ie, what's on screen)
+                            var current = mOps[0];
+                            mOps[0] = gAnswer;
+                            gAnswer = current;
+                        }
+                    }
+                    else {
+                        if (mOps_pos > 0) {
+                            var current = mOps[mOps_pos];
+                            var previous = mOps[mOps_pos - 1];
+
+                            mOps[mOps_pos - 1] = current;
+                            mOps[mOps_pos] = previous;
+
+                            gAnswer = previous;
+                        }
+                        else if (gAnswer != null) {
+                            var current = mOps[0];
+                            mOps[0] = gAnswer;
+                            gAnswer = current;
+                        }
+                    }
+                }
+                break;
+
+            case 7: // Multiply
+                if (mOps[mOps_pos] == null && mOps_pos > 0) { // No value recently entered, use last on stack unless our stack is empty
+                    mOps_pos--;
+                }
+
+                if (mOps_pos > 0) {
+                    var left = mOps[mOps_pos - 1];
+                    var right = mOps[mOps_pos];
+                    if (right == null) {
+                        right = gAnswer;
+                        if (right == null) {
+                            right = "0.";
+                        }
+                    }
+
+                    left = getDouble(left);
+                    right = getDouble(right);
+                    if (left == null || right == null) {
+                        gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                        return;
+                    }
+
+                    gAnswer = stripTrailingZeros(left * right);
+                    mOps[mOps_pos] = null;
+                    mOps[mOps_pos - 1] = gAnswer;
+                }
+                else { // Only one data on stack, acts as multuply by zero
+                    gAnswer = "0.";
+                    mOps[mOps_pos] = null;
+                }
+                switchToNumberPanel();
+                break;
+
+            case 8: // Divide
+                if (mOps[mOps_pos] == null && mOps_pos > 0) { // No value recently entered, use last on stack unless our stack is empty
+                    mOps_pos--;
+                }
+
+                if (mOps_pos > 0) {
+                    var left = mOps[mOps_pos - 1];
+                    var right = mOps[mOps_pos];
+                    if (right == null) {
+                        right = gAnswer;
+                        if (right == null) {
+                            right = "0.";
+                        }
+                    }
+
+                    left = getDouble(left);
+                    right = getDouble(right);
+                    if (left == null || right == null) {
+                        gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                        return;
+                    }
+
+                    if (right != 0) {
+                        gAnswer = stripTrailingZeros(left / right);
+                        mOps[mOps_pos] = null;
+                        mOps[mOps_pos - 1] = gAnswer;
+                    }
+                    else {
+                        gError = WatchUi.loadResource(Rez.Strings.label_divide0);
+                        return;
+                    }
+                }
+                else { // Only one data on stack, acts as denominant is 0
+                    gAnswer = "0.";
+                }
+                switchToNumberPanel();
+                break;
+
+            case 9: // Percent
+                if (mOps[mOps_pos] == null && mOps_pos > 0) { // No value recently entered, use last on stack unless our stack is empty
+                    mOps_pos--;
+                }
+
+                if (mOps_pos > 0) {
+                    var left = mOps[mOps_pos - 1];
+                    var right = mOps[mOps_pos];
+                    if (right == null) {
+                        right = gAnswer;
+                        if (right == null) {
+                            right = "0.";
+                        }
+                    }
+
+                    left = getDouble(left);
+                    right = getDouble(right);
+                    if (left == null || right == null) {
+                        gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                        return;
+                    }
+
+                    gAnswer = stripTrailingZeros(left * right / 100.0d);
+                    mOps[mOps_pos] = gAnswer;
+                    mOps_pos++;
+                }
+                else { // Only one data on stack, act as a 'Enter'
+                    if (mOps[mOps_pos] != null || gAnswer != null) { // If we have something, negate it and push it into the stack
+                        var right = mOps[mOps_pos];
+                        if (right == null) { // Last resort, use gAnswer if available
+                            right = gAnswer;
+                            if (right == null) {
+                                right = "0.";
+                            }
+                        }
+                        right = getDouble(right);
+                        if (right == null) {
+                            gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                            return;
+                        }
+                        gAnswer = stripTrailingZeros(right / 100.0d);
+                        mOps[mOps_pos] = gAnswer;
+                    }
+                    else { // nothing on stack or in gAnswer, push 0.
+                        mOps[mOps_pos] = "0.";
+                    }
+                    mOps_pos++;
+                }
+                switchToNumberPanel();
+                break;
+
+            case 10: // MS
+                if (mOps[mOps_pos] == null && mOps_pos > 0) { // No value recently entered, use last on stack unless our stack is empty
+                    mOps_pos--;
+                }
+
+                if (mOps[mOps_pos] != null || gAnswer != null) { // If we have something, negate it and push it into the stack
+                    double = mOps[mOps_pos];
+                    if (double == null) { // Last resort, use gAnswer if available
+                        double = gAnswer;
+                        if (double == null) {
+                            double = "0.";
+                        }
+                    }
+                    var double_str = double;
+                    double = getDouble(double);
+                    if (double == null) {
+                        gError = WatchUi.loadResource(Rez.Strings.label_invalid);
+                        return;
+                    }
+
+                    if (double != 0.0d) {
+                        // Empty? Stock it
+                        if (gMemory == null) {
+                            gMemory = double_str;
+                        }
+                        // Otherwise add to it
+                        else {
+                            gMemory = stripTrailingZeros(gMemory.toDouble() + double);
+                        }
+                        Storage.setValue("Memory", gMemory);
+                    }
+                    // Storing 0 is like erasing it
+                    else {
+                        gMemory = null;
+                        Storage.deleteValue("Memory");
+                    }
+                }
+                mOps[mOps_pos] = null;
+
+                break;
+
+            case 11: // MR
+                if (gMemory != null) {
+                    gAnswer = gMemory;
+                    mOps[mOps_pos] = gMemory;
+                    mUnaryPending = true;
+                }
+                break;
+        }
+    }
+    
     function switchToNumberPanel() {
         for (gGrid = gPanelSize; gGrid > 1; gGrid--) {
             if (gPanelOrder[gGrid - 1] == 1) {
@@ -1853,10 +2357,18 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
         //      We're at the top of our stack or
         //      What we have before us is a command (allows us to change command as long as we dont type a number or a '-' (which means negative number will follow))
         //      But if we have a % command pending, it's ok to have a command so do use gAnswer
-        if (mOps[mOps_pos] == null && (mOps_pos == 0 || (mOps_pos > 0 && (!(mOps[mOps_pos - 1] instanceof Lang.Number) || mUnaryPending || mPercentPending)))) {
-            mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+
+        if (mCalcMode == 0) {
+            if (mOps[mOps_pos] == null && (mOps_pos == 0 || (mOps_pos > 0 && (!(mOps[mOps_pos - 1] instanceof Lang.Number) || mUnaryPending || mPercentPending)))) {
+                mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
+            }
         }
- 
+        else {
+            if (mOps[mOps_pos] == null && mOps_pos > 0) { // No value recently entered, use last on stack unless our stack is empty
+                mOps_pos--;
+            }
+        }
+
         mUnaryPending = false; // Wether we used mUnaryPending or not, we reset it to false so it doesn't linger around
 
         // Make sure that 'number' is not a lone '-'
@@ -2126,6 +2638,23 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             mUnaryPending = true;
                         }
                         else {
+                            if (mCalcMode == 1) { // We cycle through the stack first
+                                if (gStackHistory == null) { // We're starting viewing our stack
+                                    gStackHistory = mOps_pos + 1;
+                                }
+
+                                gStackHistory--;
+                                if (gStackHistory > 0 && mOps[gStackHistory - 1] != null) {
+                                    gAnswer = mOps[gStackHistory - 1];
+
+                                    WatchUi.requestUpdate();
+                                    return false;
+                                }
+                                else {
+                                    gStackHistory = 1;
+                                }
+                            }
+
                             if (mHistorySize == 0) {
                                 return false;
                             }
@@ -2177,7 +2706,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             }
                         }
                     }
-                    else { // Like WatchUi.SWIPE_UP
+                    else { // Like WatchUi.SWIPE_DOWN
                         if (gDataView) {
                             gDataViewPos++;
                             if (gDataViewPos >= gDataCount) {
@@ -2187,6 +2716,23 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             mUnaryPending = true;
                         }
                         else {
+                            if (mCalcMode == 1) { // We cycle through the stack first
+                                if (gStackHistory == null) { // We're starting viewing our stack
+                                    gStackHistory = 0;
+                                }
+
+                                gStackHistory++;
+                                if (gStackHistory < mOps_pos && mOps[gStackHistory - 1] != null) {
+                                    gAnswer = mOps[gStackHistory - 1];
+
+                                    WatchUi.requestUpdate();
+                                    return false;
+                                }
+                                else {
+                                    gStackHistory--;
+                                }
+                            }
+
                             if (mHistorySize == 0) {
                                 return false;
                             }
