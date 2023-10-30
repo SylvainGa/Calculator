@@ -42,6 +42,9 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
     var mRestoreOnLaunch;
     var mExit;
     var mCalcMode;
+    var mOrgAnswer;
+    var mFistEnterDetected;
+    var mPrefilledFromStack;
 
     // Financial var
     var mPresentValue;
@@ -81,6 +84,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
         mRecall = false;
         mCalc = false;
         mDataChanged = false;
+        mFistEnterDetected = false;
         mParenCount = 0;
         mUnaryPending = false;
         mPercentPending = false;
@@ -159,11 +163,11 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 		var x = coords[0];
 		var y = coords[1];
         var array;
+        var oldFistEnterDetected;
 
-        gStackHistory = null;
+        oldFistEnterDetected = mFistEnterDetected;
+        mFistEnterDetected = false;
 
-        gCurrentHistoryIndex = null;
-        gCurrentHistoryIncIndex = null;
         gError = null;
         gOpText = null;
         //gDataEntry = false;
@@ -211,6 +215,18 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
         }
 
         if (gHilight > 0) {
+            if (gCurrentHistoryIndex != null || gStackHistory != null) { // If we were cycling through our history or stack, first tap gets us out of that mode and return the answer to what it was before
+                gStackHistory = null;
+                gCurrentHistoryIndex = null;
+                gCurrentHistoryIncIndex = null;
+                if (mOrgAnswer != null) {
+                    gAnswer = mOrgAnswer;
+                    mOrgAnswer = null;
+                }
+                gText = null;
+                WatchUi.requestUpdate();
+                return;
+            }
             var prefillResult;
 
             switch (gPanelOrder[gGrid - 1]) {
@@ -310,8 +326,15 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                             mUnaryPending = true;
                                         }
 
-                                        mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
-
+                                        if (mCalcMode == 0) {
+                                            mOps[mOps_pos] = null;
+                                        }
+                                        else {
+                                            mOps[mOps_pos] = gAnswer;
+                                            if (mPrefilledFromStack) {
+                                                mOps_pos++;
+                                            }
+                                        }
                                     }
                                     else {
                                         var rad = (gDegRad == Degree ? Math.toRadians(double) : double);
@@ -335,7 +358,15 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                             mUnaryPending = true;
                                         }
 
-                                        mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+                                        if (mCalcMode == 0) {
+                                            mOps[mOps_pos] = null;
+                                        }
+                                        else {
+                                            mOps[mOps_pos] = gAnswer;
+                                            if (mPrefilledFromStack) {
+                                                mOps_pos++;
+                                            }
+                                        }
                                     }
                                 }
                                 catch (e) {
@@ -382,7 +413,15 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                         mUnaryPending = true;
                                     }
 
-                                    mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+                                    if (mCalcMode == 0) {
+                                        mOps[mOps_pos] = null;
+                                    }
+                                    else {
+                                        mOps[mOps_pos] = gAnswer;
+                                        if (mPrefilledFromStack) {
+                                            mOps_pos++;
+                                        }
+                                    }
 
                                }
                                 catch (e) {
@@ -405,8 +444,16 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 if (double != 0.0d) {
                                     gAnswer = stripTrailingZeros(1.0d / double);
                                     mUnaryPending = true;
-                                    mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
 
+                                    if (mCalcMode == 0) {
+                                        mOps[mOps_pos] = null;
+                                    }
+                                    else {
+                                        mOps[mOps_pos] = gAnswer;
+                                        if (mPrefilledFromStack) {
+                                            mOps_pos++;
+                                        }
+                                    }
                                 }
                                 else {
                                     gError = WatchUi.loadResource(Rez.Strings.label_divide0);
@@ -441,8 +488,15 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                         mUnaryPending = true;
                                     }
 
-                                    mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
-
+                                    if (mCalcMode == 0) {
+                                        mOps[mOps_pos] = null;
+                                    }
+                                    else {
+                                        mOps[mOps_pos] = gAnswer;
+                                        if (mPrefilledFromStack) {
+                                            mOps_pos++;
+                                        }
+                                    }
                                 }
                                 catch (e) {
                                     gError = WatchUi.loadResource(Rez.Strings.label_invalid);
@@ -469,7 +523,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     mOps_pos++;
                                     mOps[mOps_pos] = op;
                                     mOps_pos++;
-                                    mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
+                                    mOps[mOps_pos] = null;
                                 }
                                 else if (prefillResult == 2) { // Not a number, must be an operation (other than open parenthesise), replace it with this
                                     mOps[mOps_pos - 1] = op;
@@ -562,8 +616,16 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     gAnswer = stripTrailingZeros(double);
                                 }
                                 mUnaryPending = true;
-                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
 
+                                if (mCalcMode == 0) {
+                                    mOps[mOps_pos] = null;
+                                }
+                                else {
+                                    mOps[mOps_pos] = gAnswer;
+                                    if (mPrefilledFromStack) {
+                                        mOps_pos++;
+                                    }
+                                }
                             }
 
                             gInvActive = false;
@@ -584,8 +646,16 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     gAnswer = stripTrailingZeros(double * convUnit);
                                 }
                                 mUnaryPending = true;
-                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
 
+                                if (mCalcMode == 0) {
+                                    mOps[mOps_pos] = null;
+                                }
+                                else {
+                                    mOps[mOps_pos] = gAnswer;
+                                    if (mPrefilledFromStack) {
+                                        mOps_pos++;
+                                    }
+                                }
                             }
 
                             gInvActive = false;
@@ -605,8 +675,16 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     gAnswer = stripTrailingZeros(double * 29.5735d);
                                 }
                                 mUnaryPending = true;
-                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
 
+                                if (mCalcMode == 0) {
+                                    mOps[mOps_pos] = null;
+                                }
+                                else {
+                                    mOps[mOps_pos] = gAnswer;
+                                    if (mPrefilledFromStack) {
+                                        mOps_pos++;
+                                    }
+                                }
                             }
 
                             gInvActive = false;
@@ -627,8 +705,16 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     gAnswer = stripTrailingZeros(double * convUnit);
                                 }
                                 mUnaryPending = true;
-                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
 
+                                if (mCalcMode == 0) {
+                                    mOps[mOps_pos] = null;
+                                }
+                                else {
+                                    mOps[mOps_pos] = gAnswer;
+                                    if (mPrefilledFromStack) {
+                                        mOps_pos++;
+                                    }
+                                }
                             }
 
                             gInvActive = false;
@@ -648,8 +734,16 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     gAnswer = stripTrailingZeros(double * 1.60934d);
                                 }
                                 mUnaryPending = true;
-                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
 
+                                if (mCalcMode == 0) {
+                                    mOps[mOps_pos] = null;
+                                }
+                                else {
+                                    mOps[mOps_pos] = gAnswer;
+                                    if (mPrefilledFromStack) {
+                                        mOps_pos++;
+                                    }
+                                }
                             }
 
                             gInvActive = false;
@@ -669,8 +763,16 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     gAnswer = stripTrailingZeros(double * 30.48d);
                                 }
                                 mUnaryPending = true;
-                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
 
+                                if (mCalcMode == 0) {
+                                    mOps[mOps_pos] = null;
+                                }
+                                else {
+                                    mOps[mOps_pos] = gAnswer;
+                                    if (mPrefilledFromStack) {
+                                        mOps_pos++;
+                                    }
+                                }
                             }
 
                             gInvActive = false;
@@ -690,8 +792,16 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     gAnswer = stripTrailingZeros(double * 0.453592d);
                                 }
                                 mUnaryPending = true;
-                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
 
+                                if (mCalcMode == 0) {
+                                    mOps[mOps_pos] = null;
+                                }
+                                else {
+                                    mOps[mOps_pos] = gAnswer;
+                                    if (mPrefilledFromStack) {
+                                        mOps_pos++;
+                                    }
+                                }
                             }
 
                             gInvActive = false;
@@ -711,8 +821,16 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     gAnswer = stripTrailingZeros(double * 1.60934d);
                                 }
                                 mUnaryPending = true;
-                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
 
+                                if (mCalcMode == 0) {
+                                    mOps[mOps_pos] = null;
+                                }
+                                else {
+                                    mOps[mOps_pos] = gAnswer;
+                                    if (mPrefilledFromStack) {
+                                        mOps_pos++;
+                                    }
+                                }
                             }
 
                             gInvActive = false;
@@ -732,8 +850,16 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     gAnswer = stripTrailingZeros(double * 4046.86d);
                                 }
                                 mUnaryPending = true;
-                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
 
+                                if (mCalcMode == 0) {
+                                    mOps[mOps_pos] = null;
+                                }
+                                else {
+                                    mOps[mOps_pos] = gAnswer;
+                                    if (mPrefilledFromStack) {
+                                        mOps_pos++;
+                                    }
+                                }
                             }
 
                             gInvActive = false;
@@ -761,8 +887,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 gAnswer = stripTrailingZeros(mPresentValue);
                                 mRecall = false;
                                 mUnaryPending = true;
-                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
 
+                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
                                 break;
                             }
                             if (mCalc) {
@@ -781,18 +907,15 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (mPresentValue == 0.0d) {
                                 mPresentValue = null;
                             }
-                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
-
                             break;
-
 
                         case 5: // FV
                             if (mRecall) {
                                 gAnswer = stripTrailingZeros(mFutureValue);
                                 mRecall = false;
                                 mUnaryPending = true;
-                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
 
+                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
                                 break;
                             }
                             if (mCalc) {
@@ -810,8 +933,6 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (mFutureValue == 0.0d) {
                                 mFutureValue = null;
                             }
-                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
-
                             break;
 
                         case 6: // DEP/PMT
@@ -819,8 +940,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 gAnswer = stripTrailingZeros(mPayment);
                                 mRecall = false;
                                 mUnaryPending = true;
-                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
 
+                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
                                 break;
                             }
                             if (mCalc) {
@@ -838,8 +959,6 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (mPayment == 0.0d) {
                                 mPayment = null;
                             }
-                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
-
                             break;
 
                         case 7: // YEARS
@@ -847,8 +966,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 gAnswer = stripTrailingZeros(mYears);
                                 mRecall = false;
                                 mUnaryPending = true;
-                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
 
+                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
                                 break;
                             }
                             if (mCalc) {
@@ -866,8 +985,6 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (mYears == 0.0d) {
                                 mYears = null;
                             }
-                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
-
                             break;
 
                         case 8: // I/Y
@@ -877,11 +994,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 }
                                 else {
                                     gAnswer = "0.";
-                                    mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
-
                                 }
-                                mUnaryPending = true;
+
                                 mRecall = false;
+                                mUnaryPending = true;
+
+                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
                                 break;
                             }
                             if (mCalc) {
@@ -899,8 +1017,6 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (mInterestPerYear == 0.0d) {
                                 mInterestPerYear = null;
                             }
-                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
-
                             break;
 
                         case 9: // P/Y
@@ -908,8 +1024,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 gAnswer = stripTrailingZeros(mPeriodsPerYear);
                                 mRecall = false;
                                 mUnaryPending = true;
-                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
 
+                                mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
                                 break;
                             }
                             if (mCalc) {
@@ -927,8 +1043,6 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             if (mPeriodsPerYear == 0.0d) {
                                 mPeriodsPerYear = null;
                             }
-                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
-
                             break;
 
                         case 10: // Recall
@@ -962,6 +1076,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             else {
                                 gError = WatchUi.loadResource(Rez.Strings.label_noData);
                             }
+
                             mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
 
                             break;
@@ -983,6 +1098,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             else {
                                 gError = WatchUi.loadResource(Rez.Strings.label_noData);
                             }
+
                             mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
 
                             break;
@@ -1004,13 +1120,14 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             else {
                                 gError = WatchUi.loadResource(Rez.Strings.label_noData);
                             }
+
                             mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
 
                             break;
 
                         case 4: // MEDIAN
                             if (gDataCount > 0) {
-                                if (mDataChanged) {
+                                if (mDataChanged || mDataPointsSorted == null) {
                                     mDataPointsSorted = gDataPoints;
                                     bubble_sort(mDataPointsSorted); // Data needs to be in order
                                     mDataChanged = false;
@@ -1030,6 +1147,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             else {
                                 gError = WatchUi.loadResource(Rez.Strings.label_noData);
                             }
+
                             mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
 
                             break;
@@ -1050,13 +1168,14 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             else {
                                 gError = WatchUi.loadResource(Rez.Strings.label_noData);
                             }
+
                             mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
 
                             break;
 
                         case 6: // MODE
                             if (gDataCount > 0) {
-                                if (mDataChanged) {
+                                if (mDataChanged || mDataPointsSorted == null) {
                                     mDataPointsSorted = gDataPoints;
                                     bubble_sort(mDataPointsSorted); // Data needs to be in order
                                     mDataChanged = false;
@@ -1087,13 +1206,14 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             else {
                                 gError = WatchUi.loadResource(Rez.Strings.label_noData);
                             }
+
                             mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
 
                             break;
 
                         case 7: // RANGE
                             if (gDataCount > 0) {
-                                if (mDataChanged) {
+                                if (mDataChanged || mDataPointsSorted == null) {
                                     mDataPointsSorted = gDataPoints;
                                     bubble_sort(mDataPointsSorted); // Data needs to be in order
                                     mDataChanged = false;
@@ -1106,6 +1226,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             else {
                                 gError = WatchUi.loadResource(Rez.Strings.label_noData);
                             }
+
                             mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
 
                             break;
@@ -1229,6 +1350,11 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
             gDataEntry = false;
 
             if (mCalcMode == 0) { // BEDMAS do '=' sign
+                gStackHistory = null;
+                gCurrentHistoryIndex = null;
+                gCurrentHistoryIncIndex = null;
+                mOrgAnswer = null;
+
                 if (mRestoreOnLaunch == true) {
                     Storage.deleteValue("pendingOps");
                     Storage.deleteValue("mOps_pos");
@@ -1254,23 +1380,38 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                 }
             }
             else { // RPN, do 'Enter'
-                if (mOps[mOps_pos] == null) { // If we have nothing, try to use gAnswer, otherwise, push 0.
-                    if (gDataEntry == false && gAnswer != null) { // We have nothing in our stack and we are not entering a number, store gAnswer in our history
-                        addToHistory(); // Add gAnswer to our history list
-                    }
-                    else {
-                        if (gAnswer != null) {
-                            mOps[mOps_pos] = gAnswer;
-                        }
-                        else {
-                            mOps[mOps_pos] = "0.";
-                        }
+                gText = null;
+
+                if (oldFistEnterDetected == true) { // Second time in a row we pressed enter, assume we want to save what's on screen (gAnswer), which culd be from history or stack
+                    addToHistory(); // Add gAnswer to our history list
+                    gText = WatchUi.loadResource(Rez.Strings.label_saved);
+                    mFistEnterDetected = false;
+                }
+                else { // Not the second time in a row, store the value in the stack, which could be from history or stack
+                    if (gCurrentHistoryIndex != null && gStackHistory != null) { // Pressed Enter while cycling through history or stack, this one becomes our newest data
+                        mOps[mOps_pos] = gAnswer;
                         mOps_pos++;
                     }
+                    else {
+                        if (mOps[mOps_pos] == null) { // If we have nothing try to use gAnswer, otherwise, push 0.
+                            if (gAnswer != null) {
+                                mOps[mOps_pos] = gAnswer;
+                            }
+                            else {
+                                mOps[mOps_pos] = "0.";
+                            }
+                            mOps_pos++;
+                        }
+                        else {
+                            mOps_pos++;
+                        }
+                    }
+                    mFistEnterDetected = true;
+                    gStackHistory = null;
+                    gCurrentHistoryIndex = null;
+                    gCurrentHistoryIncIndex = null;
                 }
-                else {
-                    mOps_pos++;
-                }
+                mOrgAnswer = null;
             }
         }
 
@@ -1591,11 +1732,23 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
         switch (gHilight) {
             case 1: // Pop from stack
-                if (mOps_pos > 0) { // No value recently entered, use last on stack unless our stack is empty
-                    mOps_pos--;
-                }
-                mOps[mOps_pos] = null;
-                switchToNumberPanel();
+ //               if (gStackHistory == null) { // Poping the last value from our stack
+                    if (mOps_pos > 0) { // No value recently entered, use last on stack unless our stack is empty
+                        mOps_pos--;
+                    }
+                    mOps[mOps_pos] = null;
+                // }
+                // else { // Poping the currently displayed stack entry
+                //     for (var i = gStackHistory - 1; i < mOps_pos - 1; i++) {
+                //         mOps[i] = mOps[i + 1];
+                //     }
+                //     mOps[mOps_pos] = null;
+                //     mOps_pos--;
+                //     if (gStackHistory > mOps_pos) {
+                //         gStackHistory = mOps_pos;
+                //     }
+                // }
+                // switchToNumberPanel();
                 break;
 
             case 2: // Change sign
@@ -1895,7 +2048,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                     mOps_pos--;
                 }
 
-                if (mOps[mOps_pos] != null || gAnswer != null) { // If we have something, negate it and push it into the stack
+                if (mOps[mOps_pos] != null || gAnswer != null) { // If we have something, use it, otherwise take gAnswer
                     double = mOps[mOps_pos];
                     if (double == null) { // Last resort, use gAnswer if available
                         double = gAnswer;
@@ -2020,7 +2173,9 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         else {
                             gAnswer = stripTrailingZeros(double);
                             mPresentValue =  (double == 0.0d ? null : double);
+                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
                         }
+
                         break;
 
                     case 5: // FV
@@ -2066,6 +2221,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         else {
                             gAnswer = stripTrailingZeros(double);
                             mFutureValue = double;
+                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
                         }
                         break;
 
@@ -2109,6 +2265,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         else {
                             gAnswer = stripTrailingZeros(double);
                             mPayment = (double == 0.0d ? null : double);
+                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
                         }
                         break;
 
@@ -2173,6 +2330,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         else {
                             gAnswer = stripTrailingZeros(double);
                             mYears = double;
+                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
                         }
                         break;
 
@@ -2212,6 +2370,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         else {
                             gAnswer = stripTrailingZeros(double);
                             mInterestPerYear = double / 100.0d;
+                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
                         }
                         break;
 
@@ -2257,6 +2416,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         else {
                             gAnswer = stripTrailingZeros(double);
                             mPresentValue = (double == 0.0d ? null : double);
+                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
                         }
                         break;
 
@@ -2291,6 +2451,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         else {
                             gAnswer = stripTrailingZeros(double);
                             mFutureValue = (double == 0.0d ? null : double);
+                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
                         }
                         break;
 
@@ -2329,6 +2490,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         else {
                             gAnswer = stripTrailingZeros(double);
                             mPayment = (double == 0.0d ? null : double);
+                            mOps[mOps_pos] = (mCalcMode == 0 ? null : gAnswer);
                         }
                         break;
 
@@ -2358,6 +2520,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
         //      What we have before us is a command (allows us to change command as long as we dont type a number or a '-' (which means negative number will follow))
         //      But if we have a % command pending, it's ok to have a command so do use gAnswer
 
+        mPrefilledFromStack = false;
         if (mCalcMode == 0) {
             if (mOps[mOps_pos] == null && (mOps_pos == 0 || (mOps_pos > 0 && (!(mOps[mOps_pos - 1] instanceof Lang.Number) || mUnaryPending || mPercentPending)))) {
                 mOps[mOps_pos] = (gAnswer == null ? "0" : gAnswer);
@@ -2366,6 +2529,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
         else {
             if (mOps[mOps_pos] == null && mOps_pos > 0) { // No value recently entered, use last on stack unless our stack is empty
                 mOps_pos--;
+                mPrefilledFromStack = true;
             }
         }
 
@@ -2609,21 +2773,39 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
                 if (xMovement > yMovement) { // We 'swiped' left or right predominantly
                     if (mDragStartX > coord[0]) { // Like WatchUi.SWIPE_LEFT
-                        gInvActive = false;
-                        gText = null;
-                        gDataView = false;
-                        gGrid++;
-                        if (gGrid > gPanelSize) {
-                            gGrid = 1;
+                        if (gCurrentHistoryIndex != null || gStackHistory != null) { // If we were cycling through our history or stack, first tap gets us out of that mode and return the answer to what it was before
+                            gStackHistory = null;
+                            gCurrentHistoryIndex = null;
+                            gCurrentHistoryIncIndex = null;
+                            gAnswer = mOrgAnswer;
+                            mOrgAnswer = null;
+                        }
+                        else {
+                            gInvActive = false;
+                            gText = null;
+                            gDataView = false;
+                            gGrid++;
+                            if (gGrid > gPanelSize) {
+                                gGrid = 1;
+                            }
                         }
                     }
                     else { // Like  WatchUi.SWIPE_RIGHT
-                        gInvActive = false;
-                        gText = null;
-                        gDataView = false;
-                        gGrid--;
-                        if (gGrid < 1) {
-                            gGrid = gPanelSize;
+                        if (gCurrentHistoryIndex != null || gStackHistory != null) { // If we were cycling through our history or stack, first tap gets us out of that mode and return the answer to what it was before
+                            gStackHistory = null;
+                            gCurrentHistoryIndex = null;
+                            gCurrentHistoryIncIndex = null;
+                            gAnswer = mOrgAnswer;
+                            mOrgAnswer = null;
+                        }
+                        else {
+                            gInvActive = false;
+                            gText = null;
+                            gDataView = false;
+                            gGrid--;
+                            if (gGrid < 1) {
+                                gGrid = gPanelSize;
+                            }
                         }
                     }
                 }
@@ -2638,6 +2820,9 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             mUnaryPending = true;
                         }
                         else {
+                            if (mOrgAnswer == null) {
+                                mOrgAnswer = gAnswer;
+                            }
                             if (mCalcMode == 1) { // We cycle through the stack first
                                 if (gStackHistory == null) { // We're starting viewing our stack
                                     gStackHistory = mOps_pos + 1;
@@ -2716,13 +2901,16 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             mUnaryPending = true;
                         }
                         else {
+                            if (mOrgAnswer == null) {
+                                mOrgAnswer = gAnswer;
+                            }
                             if (mCalcMode == 1) { // We cycle through the stack first
                                 if (gStackHistory == null) { // We're starting viewing our stack
                                     gStackHistory = 0;
                                 }
 
                                 gStackHistory++;
-                                if (gStackHistory < mOps_pos && mOps[gStackHistory - 1] != null) {
+                                if (gStackHistory < mOps_pos + 1 && mOps[gStackHistory - 1] != null) {
                                     gAnswer = mOps[gStackHistory - 1];
 
                                     WatchUi.requestUpdate();
