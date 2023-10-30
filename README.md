@@ -17,7 +17,7 @@ Features include:
 
 - Six panels - Numbers, arithmetic, scientific, unit conversion, loans/savings and statistical;
 - The panel order is configurable through the app Settings;
-- Can be used for BEDMAS (order of operations are Brackets, Exponent, Multiplication, Division, Addition and Substraction) or RPN (Reverse Polish Notation). There is enough place for over 50 pending operations in its buffer;
+- Can be used for BEDMAS (order of operations are Brackets, Exponent, Multiplication, Division, Addition and Substraction) or RPN (Reverse Polish Notation). There is enough place for over 50 pending operations in its buffer. You select between BEDMAS and RPN through the Apps settings on your phone or Garmin Express;
 - Includes a Memory function to store something for use later;
 - History of the last x result. You can choose to save from 0 to 50 results in the history buffer (defaults to 10). Settable in the app Settings;
 - Simple gesture to switch panels, adjust rounding precisions and view history/RPN stack;
@@ -26,6 +26,8 @@ Features include:
 - Available in both French and English. If you want to help translating in another language, get in contact with me.
 
 Please raise an issue if anything doesn't work correctly, or if you use an unsupported Garmin device, via the [Github issues page](https://github.com/SylvainGa/Calculator/issues).
+
+*** The RPN addition was a bit more demanding than originally thought and during my testing, it behaved correctly, If you're experiencing issues with it, instead of leaving a negative review, contact me and we'll discuss it and see what can be changed, if any. Thanks.
 
 ## Usage
 
