@@ -39,23 +39,25 @@ To enter an exponent, first press the '.' button if you haven't already entered 
 
 You scroll through the history/RPN stack by a swipe down/up gesture. A swipe down moves forward in the history while an up gesture moves backward. The latest result is in Position 0 (H=0) as well as viewable from the Glance view. In RPN, you'll scroll through the stack BEFORE showing the history (S=). Th stack or history value displayed can be used as part of the current equation.
 
-You change panel by left and right swipes. Right swipes move forward in the panel order while left swipes move backward. The operators +, -, x, ÷ and CA will autoreturn to the number panel. In the settings, you can adjust the order of the panels.
+In RPN, to push a history value or stack into the stack, press the Result area when scrolling is active. Since there is no Equal sign in RPN to specify the end of an operation, to push a value onto the history, touch the Result area twice in succession. "Saved" will appear on screen to let you know the data was saved.
 
-In BEDMAS, the calculator follows order of operations, unary operators are performed first (like x^2), followed by multiplications, divisions and "x power of y". Additions and subtractions are performed last (so 2+3*4 equals 14, not 20). These can be overridden by usage of parenthesis ( (2+3)*4 is equal to 20). You can nest parenthesis to perform complex operations.
+You change panel by left and right swipes IN THE BUTTON AREA. Right swipes move forward in the panel order while left swipes move backward. The operators +, -, x, ÷ and CA will autoreturn to the number panel once pressed. In the settings, you can adjust the order of the panels.
 
-In RPN, you push numbers into the stack in the order you want the opertion to be performed then you use the operands. For example, to do 2+3*4, you can type either 2 Enter, 3 Enter, 4 * + or 3 Enter, 5 * 2 +.
+Swiping left or right in the result windows changes the decimal rounding of the value displayed. Maximum is 8 decimals after the '.'. The rounding chosen is saved and restored when you relaunch the app.
 
-In the Scientific panel, INV can be used to toggle between sin, cos, tan, x^2 and asin, acos, atan, squareroot respectively. Trigonometric operations can be performed in degrees or radians by choosing the corresponding mode.
+In BEDMAS, the calculator follows algebraic order of operations, unary operators are performed first (like x^2), followed by multiplications, divisions and "x power of y". Additions and subtractions are performed last (so 2+3*4 equals 14, not 20). These can be overridden by usage of parenthesis ( (2+3)*4 in this case is equal to 20). You can nest parenthesis to perform complex operations.
+
+In RPN, you push numbers into the stack in the order you want the operation to be performed then you use the operands to perform the calculations. For example, to do 2+3*4, you can type either 2 Enter 3 Enter 4 * + or 3 Enter 4 * 2 +. To make it equals 20 instead, you would enter 2 Enter 3 + 4 * or 4 Enter 2 Enter 3 + *. For Unary operators like x^2, if the data is in the stack, the answer will replace it. If the data is only on screen and not yet in the stack, the answer will just be on the screen and will need to be pushed manually if it needs to be in the stack, but the following will work: For 3 + 1/4 enter it as 3 Enter 4 1/x +
+
+In the Scientific panel, INV can be used to toggle between sin, cos, tan, x^2 and asin, acos, atan, squareroot and x^(1/y) respectively. Trigonometric operations can be performed in degrees or radians by choosing the corresponding mode.
 
 In the Unit conversion panel, you can change the order of operation through the INV button. The IMP/USA button applies to Gallons and Cups.
 
-In the Loan/Savings panel, you fill the value you know (a * will appear beside a field that has a value) and then pressed Calc followed by the field you want to be calculated. Although only one of Present Value (PV) and DEP (Deposit) could be entered, the other fields must all be entered except for the field to find its value. For example, to find the Future Value (FV) of a Present Value (PV) of $1000, with a compound interest of 10% yearly (I/Y) after 5 Years (YEARS) with I Payment per year (P/Y), you fill these field and then press Calc FV.
+In the Loan/Savings panel, you fill the value you know (a * will appear beside a field that has a value) and then pressed Calc followed by the field you want to be calculated. Although only one of Present Value (PV) and DEP (Deposit) could be entered, the other fields must all be entered except for the field to find its value. For example, to find the Future Value (FV) of a Present Value (PV) of $1000, with a compound interest of 10% yearly (I/Y) after 5 Years (YEARS) with 1 Payment per year (P/Y), you fill these fields and then press Calc FV. See V1.1.0 below for more details.
 
-In the Statistical panel, you enter the data one by one by pressing 'Add' once the data is on screen. If you want to delete an entry, type its value and press Del. The operations that can be performed are Mean, Sum of Square Deviation (SSDEV), Population Standard Deviation (PSDEV), Median, Variance (VARIAN), Mode and Range. Data entered survive an application close so if the app terminates before you have time to enter all the data, just continue where you left off. You need to press Reset then Del to erase the data. Pressin View acts just like the history buffer, allowing you to cycle between all the data you entered.
+In the Statistical panel, you enter the data one by one by pressing 'Add' after entering a data. If you want to delete an entry, type its value and press Del. The operations that can be performed are MEAN (The mean of the number set), SSDEV (Sample Standard Deviation), PSDEV (Population Standard Deviation), MEDIAN (The median of the number set), VARIAN (The variance of the number set), MODE (The mode of the number set) and RANGE (The range of the number set). Data entered survives an application close so if the app terminates before you have time to enter all your data, just continue where you left off. You need to press Reset then Del to erase the stored data. Pressing the View button acts just like the history buffer, allowing you to cycle between all the data you entered with an up/down gesture. See V1.2.0 below for more details.
 
 If you like the widget, please consider [leaving a positive review](https://apps.garmin.com/en-US/apps/5270a7c6-33c9-4114-8cc6-e513f6866440).
-
-If you want to have the widget translated to your language, contact me through email or github.
 
 ## Changelog
 V1.7.1 Made the following supported devices changes
