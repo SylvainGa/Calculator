@@ -25,7 +25,7 @@ Features include:
 - Support Complication so it can be launched directly from a watch face. Simply use 0 for Type and Calculator for the Long Name;
 - Available in both French and English. If you want to help translating in another language, get in contact with me.
 
-Please raise an issue if anything doesn't work correctly, or if you use an unsupported Garmin device, via the [Github issues page](https://github.com/SylvainGa/Calculator/issues).
+Please raise an issue if anything doesn't work correctly, if you have issues with swiping, or if you use an unsupported Garmin device, via the [Github issues page](https://github.com/SylvainGa/Calculator/issues).
 
 *** The RPN addition was a bit more demanding than originally thought and during my testing, it behaved correctly, If you're experiencing issues with it, instead of leaving a negative review, contact me and we'll discuss it and see what can be changed, if any. Thanks.
 
@@ -58,6 +58,11 @@ If you like the widget, please consider [leaving a positive review](https://apps
 If you want to have the widget translated to your language, contact me through email or github.
 
 ## Changelog
+V1.7.1 Made the following supported devices changes
+  Removed the Forerunner265 and Forefunner265s watches from the supported list as they don't have the 'onDrag' call that I'm using to know where on the screen you're swiping.
+  Added the D2AirX10, D2Mach1 and Fenix7XPro No Wifi watches as supported devices.
+  Compiled with ICQ 6.3.1
+
 V1.7.0 Added the following
   Inv transforms x^2 and x^y into √x and y√x, thank you jwessel for your contribution
   Allow the use of RPN (Reverse Polish Notation) to do calculations. Settable in the App Settings.
