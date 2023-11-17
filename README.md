@@ -60,6 +60,8 @@ In the Statistical panel, you enter the data one by one by pressing 'Add' after 
 If you like the widget, please consider [leaving a positive review](https://apps.garmin.com/en-US/apps/5270a7c6-33c9-4114-8cc6-e513f6866440).
 
 ## Changelog
+V1.7.2 Fixed a crash when running out of space in RPN mode
+ 
 V1.7.1 Made the following supported devices changes
   Removed the Forerunner265 and Forefunner265s watches from the supported list as they don't have the 'onDrag' call that I'm using to know where on the screen you're swiping.
   Added the D2AirX10, D2Mach1 and Fenix7XPro No Wifi watches as supported devices.

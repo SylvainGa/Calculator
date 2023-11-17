@@ -17,6 +17,7 @@
 	<string id="label_notPresent">Non trouvé</string>
 	<string id="label_restored">Récupéré</string>
 	<string id="label_saved">Sauvegardé</string>
+	<string id="label_outOfRoom">Plus d'espace</string>
 
 	<string id="setting_historySize">Dimension de l'historique des résultats</string>
 	<string id="setting_panelOrder">Ordre des panneaux</string>

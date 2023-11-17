@@ -29,9 +29,11 @@ enum { Oper_DOT = 0,
        Oper_NthRoot
     }
 
+enum { maxSize = 50 }
+
 class CalculatorDelegate extends WatchUi.BehaviorDelegate {
     var mTimer;
-    var mOps = new [20];
+    var mOps = new [maxSize];
     var mOps_pos; 
     var mHistorySize;
     var mCountHistory;
@@ -332,7 +334,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                         else {
                                             mOps[mOps_pos] = gAnswer;
                                             if (mPrefilledFromStack) {
-                                                mOps_pos++;
+                                                if (mOps_pos < maxSize - 1) {
+                                                    mOps_pos++;
+                                                }
+                                                else {
+                                                    gError = WatchUi.loadResource(Rez.Strings.label_outOfRoom);
+                                                }
                                             }
                                         }
                                     }
@@ -364,7 +371,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                         else {
                                             mOps[mOps_pos] = gAnswer;
                                             if (mPrefilledFromStack) {
-                                                mOps_pos++;
+                                                if (mOps_pos < maxSize - 1) {
+                                                    mOps_pos++;
+                                                }
+                                                else {
+                                                    gError = WatchUi.loadResource(Rez.Strings.label_outOfRoom);
+                                                }
                                             }
                                         }
                                     }
@@ -419,7 +431,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     else {
                                         mOps[mOps_pos] = gAnswer;
                                         if (mPrefilledFromStack) {
-                                            mOps_pos++;
+                                            if (mOps_pos < maxSize - 1) {
+                                                mOps_pos++;
+                                            }
+                                            else {
+                                                gError = WatchUi.loadResource(Rez.Strings.label_outOfRoom);
+                                            }
                                         }
                                     }
 
@@ -451,7 +468,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     else {
                                         mOps[mOps_pos] = gAnswer;
                                         if (mPrefilledFromStack) {
-                                            mOps_pos++;
+                                            if (mOps_pos < maxSize - 1) {
+                                                mOps_pos++;
+                                            }
+                                            else {
+                                                gError = WatchUi.loadResource(Rez.Strings.label_outOfRoom);
+                                            }
                                         }
                                     }
                                 }
@@ -494,7 +516,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                     else {
                                         mOps[mOps_pos] = gAnswer;
                                         if (mPrefilledFromStack) {
-                                            mOps_pos++;
+                                            if (mOps_pos < maxSize - 1) {
+                                                mOps_pos++;
+                                            }
+                                            else {
+                                                gError = WatchUi.loadResource(Rez.Strings.label_outOfRoom);
+                                            }
                                         }
                                     }
                                 }
@@ -520,10 +547,15 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 }
                                 else if (prefillResult == 1) { // Valid number entered
                                     calcPrevious(op);
-                                    mOps_pos++;
-                                    mOps[mOps_pos] = op;
-                                    mOps_pos++;
-                                    mOps[mOps_pos] = null;
+                                    if (mOps_pos < maxSize - 2) {
+                                        mOps_pos++;
+                                        mOps[mOps_pos] = op;
+                                        mOps_pos++;
+                                        mOps[mOps_pos] = null;
+                                    }
+                                    else {
+                                        gError = WatchUi.loadResource(Rez.Strings.label_outOfRoom);
+                                    }
                                 }
                                 else if (prefillResult == 2) { // Not a number, must be an operation (other than open parenthesise), replace it with this
                                     mOps[mOps_pos - 1] = op;
@@ -623,7 +655,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 else {
                                     mOps[mOps_pos] = gAnswer;
                                     if (mPrefilledFromStack) {
-                                        mOps_pos++;
+                                        if (mOps_pos < maxSize - 1) {
+                                            mOps_pos++;
+                                        }
+                                        else {
+                                            gError = WatchUi.loadResource(Rez.Strings.label_outOfRoom);
+                                        }
                                     }
                                 }
                             }
@@ -653,7 +690,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 else {
                                     mOps[mOps_pos] = gAnswer;
                                     if (mPrefilledFromStack) {
-                                        mOps_pos++;
+                                        if (mOps_pos < maxSize - 1) {
+                                            mOps_pos++;
+                                        }
+                                        else {
+                                            gError = WatchUi.loadResource(Rez.Strings.label_outOfRoom);
+                                        }
                                     }
                                 }
                             }
@@ -682,7 +724,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 else {
                                     mOps[mOps_pos] = gAnswer;
                                     if (mPrefilledFromStack) {
-                                        mOps_pos++;
+                                        if (mOps_pos < maxSize - 1) {
+                                            mOps_pos++;
+                                        }
+                                        else {
+                                            gError = WatchUi.loadResource(Rez.Strings.label_outOfRoom);
+                                        }
                                     }
                                 }
                             }
@@ -712,7 +759,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 else {
                                     mOps[mOps_pos] = gAnswer;
                                     if (mPrefilledFromStack) {
-                                        mOps_pos++;
+                                        if (mOps_pos < maxSize - 1) {
+                                            mOps_pos++;
+                                        }
+                                        else {
+                                            gError = WatchUi.loadResource(Rez.Strings.label_outOfRoom);
+                                        }
                                     }
                                 }
                             }
@@ -741,7 +793,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 else {
                                     mOps[mOps_pos] = gAnswer;
                                     if (mPrefilledFromStack) {
-                                        mOps_pos++;
+                                        if (mOps_pos < maxSize - 1) {
+                                            mOps_pos++;
+                                        }
+                                        else {
+                                            gError = WatchUi.loadResource(Rez.Strings.label_outOfRoom);
+                                        }
                                     }
                                 }
                             }
@@ -770,7 +827,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 else {
                                     mOps[mOps_pos] = gAnswer;
                                     if (mPrefilledFromStack) {
-                                        mOps_pos++;
+                                        if (mOps_pos < maxSize - 1) {
+                                            mOps_pos++;
+                                        }
+                                        else {
+                                            gError = WatchUi.loadResource(Rez.Strings.label_outOfRoom);
+                                        }
                                     }
                                 }
                             }
@@ -799,7 +861,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 else {
                                     mOps[mOps_pos] = gAnswer;
                                     if (mPrefilledFromStack) {
-                                        mOps_pos++;
+                                        if (mOps_pos < maxSize - 1) {
+                                            mOps_pos++;
+                                        }
+                                        else {
+                                            gError = WatchUi.loadResource(Rez.Strings.label_outOfRoom);
+                                        }
                                     }
                                 }
                             }
@@ -828,7 +895,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 else {
                                     mOps[mOps_pos] = gAnswer;
                                     if (mPrefilledFromStack) {
-                                        mOps_pos++;
+                                        if (mOps_pos < maxSize - 1) {
+                                            mOps_pos++;
+                                        }
+                                        else {
+                                            gError = WatchUi.loadResource(Rez.Strings.label_outOfRoom);
+                                        }
                                     }
                                 }
                             }
@@ -857,7 +929,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                                 else {
                                     mOps[mOps_pos] = gAnswer;
                                     if (mPrefilledFromStack) {
-                                        mOps_pos++;
+                                        if (mOps_pos < maxSize - 1) {
+                                            mOps_pos++;
+                                        }
+                                        else {
+                                            gError = WatchUi.loadResource(Rez.Strings.label_outOfRoom);
+                                        }
                                     }
                                 }
                             }
@@ -1390,7 +1467,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                 else { // Not the second time in a row, store the value in the stack, which could be from history or stack
                     if (gCurrentHistoryIndex != null && gStackHistory != null) { // Pressed Enter while cycling through history or stack, this one becomes our newest data
                         mOps[mOps_pos] = gAnswer;
-                        mOps_pos++;
+                        if (mOps_pos < maxSize - 1) {
+                            mOps_pos++;
+                        }
+                        else {
+                            gError = WatchUi.loadResource(Rez.Strings.label_outOfRoom);
+                        }
                     }
                     else {
                         if (mOps[mOps_pos] == null) { // If we have nothing try to use gAnswer, otherwise, push 0.
@@ -1400,10 +1482,20 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             else {
                                 mOps[mOps_pos] = "0.";
                             }
-                            mOps_pos++;
+                            if (mOps_pos < maxSize - 1) {
+                                mOps_pos++;
+                            }
+                            else {
+                                gError = WatchUi.loadResource(Rez.Strings.label_outOfRoom);
+                            }
                         }
                         else {
-                            mOps_pos++;
+                            if (mOps_pos < maxSize - 1) {
+                                mOps_pos++;
+                            }
+                            else {
+                                gError = WatchUi.loadResource(Rez.Strings.label_outOfRoom);
+                            }
                         }
                     }
                     mFistEnterDetected = true;
@@ -1493,7 +1585,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                 }
                 // We just tag its place in the queue so ParenClose can do its thing
                 mOps[mOps_pos] = Oper_ParenOpen;
-                mOps_pos++;
+                if (mOps_pos < maxSize - 1) {
+                    mOps_pos++;
+                }
+                else {
+                    gError = WatchUi.loadResource(Rez.Strings.label_outOfRoom);
+                }
                 mOps[mOps_pos] = null;
                 mParenCount++;
                 gOpText = "(x" + mParenCount;
@@ -1542,10 +1639,15 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                 }
                 else if (prefillResult == 1) { // Valid number entered
                     calcPrevious(Oper_Add);
-                    mOps_pos++;
-                    mOps[mOps_pos] = Oper_Add;
-                    mOps_pos++;
-                    mOps[mOps_pos] = null;
+                    if (mOps_pos < maxSize - 2) {
+                        mOps_pos++;
+                        mOps[mOps_pos] = Oper_Add;
+                        mOps_pos++;
+                        mOps[mOps_pos] = null;
+                    }
+                    else {
+                        gError = WatchUi.loadResource(Rez.Strings.label_outOfRoom);
+                    }
                 }
                 else if (prefillResult == 2) { // Not a number, must be an operation (other than open parenthesise), replace it with this
                     mOps[mOps_pos - 1] = Oper_Add;
@@ -1583,10 +1685,15 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                             break;
                         }
                         calcPrevious(Oper_Substract);
-                        mOps_pos++;
-                        mOps[mOps_pos] = Oper_Substract;
-                        mOps_pos++;
-                        mOps[mOps_pos] = null;
+                        if (mOps_pos < maxSize - 2) {
+                            mOps_pos++;
+                            mOps[mOps_pos] = Oper_Substract;
+                            mOps_pos++;
+                            mOps[mOps_pos] = null;
+                        }
+                        else {
+                            gError = WatchUi.loadResource(Rez.Strings.label_outOfRoom);
+                        }
                     }
                     // Not a number, must be an operation (other than open parenthesise), replace it with this
                     else if (mOps_pos > 0 && mOps[mOps_pos - 1] != Oper_ParenOpen) {
@@ -1623,10 +1730,15 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                 }
                 else if (prefillResult == 1) { // Valid number entered
                     calcPrevious(Oper_Multiply);
-                    mOps_pos++;
-                    mOps[mOps_pos] = Oper_Multiply;
-                    mOps_pos++;
-                    mOps[mOps_pos] = null;
+                    if (mOps_pos < maxSize - 2) {
+                        mOps_pos++;
+                        mOps[mOps_pos] = Oper_Multiply;
+                        mOps_pos++;
+                        mOps[mOps_pos] = null;
+                    }
+                    else {
+                        gError = WatchUi.loadResource(Rez.Strings.label_outOfRoom);
+                    }
                 }
                 else if (prefillResult == 2) { // Not a number, must be an operation (other than open parenthesise), replace it with this
                     mOps[mOps_pos - 1] = Oper_Multiply;
@@ -1642,10 +1754,15 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                 }
                 else if (prefillResult == 1) { // Valid number entered
                     calcPrevious(Oper_Divide);
-                    mOps_pos++;
-                    mOps[mOps_pos] = Oper_Divide;
-                    mOps_pos++;
-                    mOps[mOps_pos] = null;
+                    if (mOps_pos < maxSize - 2) {
+                        mOps_pos++;
+                        mOps[mOps_pos] = Oper_Divide;
+                        mOps_pos++;
+                        mOps[mOps_pos] = null;
+                    }
+                    else {
+                        gError = WatchUi.loadResource(Rez.Strings.label_outOfRoom);
+                    }
                 }
                 else if (prefillResult == 2) { // Not a number, must be an operation (other than open parenthesise), replace it with this
                     mOps[mOps_pos - 1] = Oper_Divide;
@@ -1770,7 +1887,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                 }
                 gAnswer = stripTrailingZeros(-double);
                 mOps[mOps_pos] = gAnswer;
-                mOps_pos++;
+                if (mOps_pos < maxSize - 1) {
+                    mOps_pos++;
+                }
+                else {
+                    gError = WatchUi.loadResource(Rez.Strings.label_outOfRoom);
+                }
 
                 switchToNumberPanel();
                 break;
@@ -1818,7 +1940,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                 }
                 else { // Only one data on stack?, act as if Enter was pressed (but don't store in History)
                     if (mOps[mOps_pos] != null) {
-                        mOps_pos++;
+                        if (mOps_pos < maxSize - 1) {
+                            mOps_pos++;
+                        }
+                        else {
+                            gError = WatchUi.loadResource(Rez.Strings.label_outOfRoom);
+                        }
                     }
                 }
                 switchToNumberPanel();
@@ -1861,7 +1988,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                         gAnswer = stripTrailingZeros(-right);
                         mOps[mOps_pos] = gAnswer;
 
-                        mOps_pos++;
+                        if (mOps_pos < maxSize - 1) {
+                            mOps_pos++;
+                        }
+                        else {
+                            gError = WatchUi.loadResource(Rez.Strings.label_outOfRoom);
+                        }
                     }
                 }
                 switchToNumberPanel();
@@ -2016,7 +2148,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
                     gAnswer = stripTrailingZeros(left * right / 100.0d);
                     mOps[mOps_pos] = gAnswer;
-                    mOps_pos++;
+                    if (mOps_pos < maxSize - 1) {
+                        mOps_pos++;
+                    }
+                    else {
+                        gError = WatchUi.loadResource(Rez.Strings.label_outOfRoom);
+                    }
                 }
                 else { // Only one data on stack, act as a 'Enter'
                     if (mOps[mOps_pos] != null || gAnswer != null) { // If we have something, negate it and push it into the stack
@@ -2038,7 +2175,12 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
                     else { // nothing on stack or in gAnswer, push 0.
                         mOps[mOps_pos] = "0.";
                     }
-                    mOps_pos++;
+                    if (mOps_pos < maxSize - 1) {
+                        mOps_pos++;
+                    }
+                    else {
+                        gError = WatchUi.loadResource(Rez.Strings.label_outOfRoom);
+                    }
                 }
                 switchToNumberPanel();
                 break;

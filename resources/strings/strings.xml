@@ -1,6 +1,6 @@
 <strings>
     <string id="AppName">Calculator</string>
-    <string id="AppNameVersion">Calculator V1.7.1</string>
+    <string id="AppNameVersion">Calculator V1.7.2</string>
     <string id="shortComplicationLabel">Calc</string>
     <string id="longComplicationLabel">Calculator</string>
 
@@ -18,6 +18,7 @@
 	<string id="label_notPresent">Not found</string>
 	<string id="label_restored">Restored</string>
 	<string id="label_saved">Saved</string>
+	<string id="label_outOfRoom">Out of room</string>
 	
 	<string id="setting_historySize">Size of history buffer</string>
 	<string id="setting_panelOrder">Panel order</string>
