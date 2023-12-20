@@ -1448,6 +1448,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
                     addToHistory(); // Add gAnswer to our history list
 
+                    gCurrentHistoryIndex = null; // AddTiHistory modified this back from null above, set it back to null.
                     mParenCount = 0;
                     mUnaryPending = false;
                     mPercentPending = false;
