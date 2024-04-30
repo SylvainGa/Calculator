@@ -60,6 +60,13 @@ In the Statistical panel, you enter the data one by one by pressing 'Add' after 
 If you like the widget, please consider [leaving a positive review](https://apps.garmin.com/en-US/apps/5270a7c6-33c9-4114-8cc6-e513f6866440).
 
 ## Changelog
+V1.7.6 Compiled with CIQ 7.1.1 and added the following
+- Descent MK3 43mm
+- Descent MK3 51mm
+- Forerunner 165
+- Forerunner 165m
+- Changes done through settings are applied live
+
 V1.7.5 Removed (again) VivoActive 3 from the list of supported devices since they don't support the onDrag call I make to detect where a swipe was done on screen. 
 
 V1.7.4 Fixed a bug where a swipe left or right after an '=' would end up displaying 0
