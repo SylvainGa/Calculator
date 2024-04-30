@@ -99,6 +99,10 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
 
         restoreDataPoints();
 
+        onSettingsChanged();
+    }
+
+    function onSettingsChanged() {
         // Read into memory if we had a pending operations when we last left
         try {
             mRestoreOnLaunch = Properties.getValue("restoreOnLaunch");
@@ -155,7 +159,7 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
             mCalcMode = 0;
         }
     }
-
+    
     function onSelect() {
         return false;
     }

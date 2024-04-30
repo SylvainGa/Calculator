@@ -50,6 +50,8 @@ class CalculatorView extends WatchUi.View {
         View.initialize();
         mDelegate = delegate;
 
+        onSettingsChanged();
+        
         gDigits = Storage.getValue("digits");
         if (gDigits == null || gDigits < 0 || gDigits > 10) {
             gDigits = 6;
@@ -58,12 +60,15 @@ class CalculatorView extends WatchUi.View {
 
         gMemory = Storage.getValue("Memory");
 
+    }
+
+    function onSettingsChanged() {
         var panelOrderStr;
         try {
             panelOrderStr = Properties.getValue("panelOrder");
         }
         catch (e) {
-            Properties.setValue("panelOrder", "1,2,3,4, 5, 6");
+            Properties.setValue("panelOrder", "1,2,3,4,5,6");
         }
 
         if (panelOrderStr != null) {

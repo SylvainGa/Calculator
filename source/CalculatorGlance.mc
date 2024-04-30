@@ -8,6 +8,9 @@ class GlanceView extends WatchUi.GlanceView {
         GlanceView.initialize();
     }
 
+    function onSettingsChanged() {
+    }
+    
     function onLayout(dc) {
     }
 
