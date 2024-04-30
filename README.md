@@ -60,6 +60,8 @@ In the Statistical panel, you enter the data one by one by pressing 'Add' after 
 If you like the widget, please consider [leaving a positive review](https://apps.garmin.com/en-US/apps/5270a7c6-33c9-4114-8cc6-e513f6866440).
 
 ## Changelog
+V1.7.5 Removed (again) VivoActive 3 from the list of supported devices since they don't support the onDrag call I make to detect where a swipe was done on screen. 
+
 V1.7.4 Fixed a bug where a swipe left or right after an '=' would end up displaying 0
 
 V1.7.3 Renove the VivoActive3 and its variant since it doesn't support the onDrag call. My bad.
