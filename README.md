@@ -60,6 +60,8 @@ In the Statistical panel, you enter the data one by one by pressing 'Add' after 
 If you like the widget, please consider [leaving a positive review](https://apps.garmin.com/en-US/apps/5270a7c6-33c9-4114-8cc6-e513f6866440).
 
 ## Changelog
+V1.7.7 Compiled with CIQ 7.2.1 and since Garmin woke up and gave the Forerunner 265 the onDrag routine, it's back as a supported device
+
 V1.7.6 Compiled with CIQ 7.1.1 and added the following
 - Descent MK3 43mm
 - Descent MK3 51mm
