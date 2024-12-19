@@ -1,6 +1,6 @@
 # The Swiss army knife of calculators Widget
 
-The Swiss army knife of calculators Widget is a Garmin ConnectIQ widget to perform standard, scientific, unit conversion, loans/savings and statistical calculations on a touch-enabled watch using either BEDMAS or RPN calculation methods. Round and rectangular/square watches are supported
+The Swiss army knife of calculators Widget is a Garmin ConnectIQ widget to perform standard, scientific, unit conversion, loans/savings and statistical calculations on a touch-enabled watch using either BEDMAS or RPN calculation methods. Round and rectangular/square watches and Edges devices that have touch screens are supported
 
 **If you enjoy this app, you can support my work with a small donation:**
 https://bit.ly/sylvainga
