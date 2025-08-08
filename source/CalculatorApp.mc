@@ -51,6 +51,7 @@ class CalculatorApp extends Application.AppBase {
             return [  mCalculatorView,  mCalculatorDelegate ] as Array<Views or InputDelegates>;
         }
         else { // Sucks, but we have to have an extra view so swipe gestures work in our main view
+            Storage.setValue("fromGlance", false);
             return [ new NoGlanceView(), new NoGlanceDelegate() ];
         }
     }

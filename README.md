@@ -60,6 +60,8 @@ In the Statistical panel, you enter the data one by one by pressing 'Add' after 
 If you like the widget, please consider [leaving a positive review](https://apps.garmin.com/en-US/apps/5270a7c6-33c9-4114-8cc6-e513f6866440).
 
 ## Changelog
+V1.7.10 Autolaunch the calculator, even if not launched from Glance
+
 V1.7.9 Compiled with CIQ 7.4.3. Added Edges device that have a touch screen.
 
 V1.7.8 Compiled with CIQ 7.3.0. Added Enduro3 and new Fenix8 watches.
