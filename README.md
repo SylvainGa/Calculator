@@ -60,6 +60,8 @@ In the Statistical panel, you enter the data one by one by pressing 'Add' after 
 If you like the widget, please consider [leaving a positive review](https://apps.garmin.com/en-US/apps/5270a7c6-33c9-4114-8cc6-e513f6866440).
 
 ## Changelog
+V1.7.13 Font size in glance depends on display height
+
 V1.7.12 Compiled with CIQ 8.2.2. Autolaunch the calculator, even if not launched from Glance
 
 V1.7.11 Removed the Instinct 3 devices which were added by error as these devices aren't touch screen enabled.
