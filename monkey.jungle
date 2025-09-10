@@ -22,6 +22,7 @@ fenix8solar47mm.resourcePath=$(fenix8solar47mm.resourcePath);resources-complicat
 fenix8solar51mm.resourcePath=$(fenix8solar51mm.resourcePath);resources-complications
 fenix843mm.resourcePath=$(fenix843mm.resourcePath);resources-complications
 fenix847mm.resourcePath=$(fenix847mm.resourcePath);resources-complications
+fenix8pro47mm.resourcePath=$(fenix8pro47mm.resourcePath);resources-complications
 fenixe.resourcePath=$(fenixe.resourcePath);resources-complications
 fr165.resourcePath=$(fr165.resourcePath);resources-complications
 fr165m.resourcePath=$(fr165m.resourcePath);resources-complications

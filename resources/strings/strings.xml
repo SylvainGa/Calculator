@@ -1,6 +1,6 @@
 <strings>
     <string id="AppName">Calculator</string>
-    <string id="AppNameVersion">Calculator V1.7.13.b1</string>
+    <string id="AppNameVersion" translatable="false">Calculator V1.7.12.b2</string>
     <string id="shortComplicationLabel">Calc</string>
     <string id="longComplicationLabel">Calculator</string>
 
