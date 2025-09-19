@@ -42,5 +42,7 @@ venusq2.resourcePath=$(venusq2.resourcePath);resources-complications
 venusq2m.resourcePath=$(venusq2m.resourcePath);resources-complications
 venu3.resourcePath=$(venu3.resourcePath);resources-complications
 venu3s.resourcePath=$(venu3s.resourcePath);resources-complications
+venu441mm.resourcePath=$(venu441mm.resourcePath);resources-complications
+venu445mm.resourcePath=$(venu445mm.resourcePath);resources-complications
 vivoactive5.resourcePath=$(vivoactive5.resourcePath);resources-complications
 vivoactive6.resourcePath=$(vivoactive6.resourcePath);resources-complications

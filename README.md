@@ -61,6 +61,8 @@ If you like the widget, please consider [leaving a positive review](https://apps
 
 ## Changelog
 
+V1.7.13 Added the Venu4 41 and 45 mm devices
+
 V1.7.12 Compiled with CIQ 8.2.3 and added the following
 - Added the Fenix 8 Pro 47 mm and Edge 850 devices. On my Simulator, the 850 do not show text. Hoping it's a simulator issue as I see nothing wrong with the code as such. If you're experiencing the same on your device (that I don't have so can't test), let me know through 'Contact Developper'/'App support' and I'll digg further.
 - Autolaunch the calculator, even if not launched from Glance
