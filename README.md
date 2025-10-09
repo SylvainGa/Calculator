@@ -61,12 +61,18 @@ If you like the widget, please consider [leaving a positive review](https://apps
 
 ## Changelog
 
+V1.8.0 Compiled with CIQ 8.3.0 and added the following
+- Fonts are dynamically chosen based on the largest text size of each panels.
+- Text is clipped so it doesn't overflow on the following button (issue with some devices when even the smallest font size is too big).
+- Venu X1, the eTrex and the GPSMAP H1 devices.
+- Removed VivoActive Square as it doesn't habe enough memory to run this widget/app
+
 V1.7.13 Added the Venu4 41 and 45 mm devices
 
 V1.7.12 Compiled with CIQ 8.2.3 and added the following
 - Added the Fenix 8 Pro 47 mm and Edge 850 devices. On my Simulator, the 850 do not show text. Hoping it's a simulator issue as I see nothing wrong with the code as such. If you're experiencing the same on your device (that I don't have so can't test), let me know through 'Contact Developper'/'App support' and I'll digg further.
-- Autolaunch the calculator, even if not launched from Glance
-- Font size in glance depends on display height
+- Autolaunch the calculator, even if not launched from Glance.
+- Font size in glance depends on display height.
 
 V1.7.11 Removed the Instinct 3 devices which were added by error as these devices aren't touch screen enabled.
 
@@ -76,49 +82,44 @@ V1.7.9 Compiled with CIQ 7.4.3. Added Edges device that have a touch screen.
 
 V1.7.8 Compiled with CIQ 7.3.0. Added Enduro3 and new Fenix8 watches.
 
-V1.7.7 Compiled with CIQ 7.2.1 and since Garmin woke up and gave the Forerunner 265 the onDrag routine, it's back as a supported device
+V1.7.7 Compiled with CIQ 7.2.1 and since Garmin woke up and gave the Forerunner 265 the onDrag routine, it's back as a supported device.
 
 V1.7.6 Compiled with CIQ 7.1.1 and added the following
-
 - Descent MK3 43mm
-
 - Descent MK3 51mm
-
 - Forerunner 165
-
 - Forerunner 165m
+- Changes done through settings are applied live.
 
-- Changes done through settings are applied live
+V1.7.5 Removed (again) VivoActive 3 from the list of supported devices since they don't support the onDrag call I make to detect where a swipe was done on screen.
 
-V1.7.5 Removed (again) VivoActive 3 from the list of supported devices since they don't support the onDrag call I make to detect where a swipe was done on screen. 
-
-V1.7.4 Fixed a bug where a swipe left or right after an '=' would end up displaying 0
+V1.7.4 Fixed a bug where a swipe left or right after an '=' would end up displaying 0.
 
 V1.7.3 Renove the VivoActive3 and its variant since it doesn't support the onDrag call. My bad.
 
-V1.7.2 Fixed a crash when running out of space in RPN mode
+V1.7.2 Fixed a crash when running out of space in RPN mode.
  
-V1.7.1 Made the following supported devices changes
+V1.7.1 Made the following supported devices changes.
   Removed the Forerunner265 and Forefunner265s watches from the supported list as they don't have the 'onDrag' call that I'm using to know where on the screen you're swiping.
   Added the D2AirX10, D2Mach1 and Fenix7XPro No Wifi watches as supported devices.
-  Compiled with ICQ 6.3.1
+  Compiled with ICQ 6.3.1.
 
 V1.7.0 Added the following
-  Inv transforms x^2 and x^y into √x and y√x, thank you jwessel for your contribution
+  Inv transforms x^2 and x^y into √x and y√x, thank you jwessel for your contribution.
   Allow the use of RPN (Reverse Polish Notation) to do calculations. Settable in the App Settings.
-  Crash fix in the statistical calculation when continuing from saved data
+  Crash fix in the statistical calculation when continuing from saved data.
 
 V1.6.0 Added the following
   Large and small numbers are now displayed/entered using exponents. The '.' button becomes a 'E' button once a decimal is entered so you can enter an exponent.
   As soon as an operation is entered (+, -, x, ÷ and CA), the screen autoreturns to the number panel so you cam right away start entering number without having to swipe.
 
-V1.5.2 Added support for the VivoActive5
+V1.5.2 Added support for the VivoActive5.
 
-V1.5.1 Fixes the order of precedence for the exponent (x^y) code so it's performed before any other operation (so 50 x 1.03^5 yields 57.9637 now and not 362273148.21875)
+V1.5.1 Fixes the order of precedence for the exponent (x^y) code so it's performed before any other operation (so 50 x 1.03^5 yields 57.9637 now and not 362273148.21875).
 
-V1.5.0 Allow the removal of some panels
+V1.5.0 Allow the removal of some panels.
 
-V1.4.2 Added Venu3 and Venu3S as supported devices
+V1.4.2 Added Venu3 and Venu3S as supported devices.
 
 V1.4.1 Some watches, like the VivoActive 4S behaves differently in the simulator than on the real device. On those devices, don't swipe too fast or it won't record the swipe. You'll also have to press the Back button TWICE to leave the app.
 
@@ -192,11 +193,11 @@ V1.1.0 Added the following:
 - Swiping the result window left or right changes the number of digits after the decimal points. Works when a value is displayed, not when entering a number. The number of digits is saved and restored on the next launch.
 - When an arithmetic operation is selected, it will show up on the right edge of the result windows.
 
-V1.0.2 Fixed a crash while calculating
+V1.0.2 Fixed a crash while calculating.
 
-V1.0.1 Fixed a crash while stripping trailing zeros from the answer
+V1.0.1 Fixed a crash while stripping trailing zeros from the answer.
 
-V1.0.0 Initial release
+V1.0.0 Initial release.
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.

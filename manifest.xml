@@ -35,6 +35,7 @@
             <iq:product id="epix2pro42mm"/>
             <iq:product id="epix2pro47mm"/>
             <iq:product id="epix2pro51mm"/>
+            <iq:product id="etrextouch"/>
             <iq:product id="fenix7"/>
             <iq:product id="fenix7pro"/>
             <iq:product id="fenix7pronowifi"/>
@@ -58,8 +59,7 @@
             <iq:product id="fr955"/>
             <iq:product id="fr965"/>
             <iq:product id="fr970"/>
-            <iq:product id="instinct3amoled45mm"/>
-            <iq:product id="instinct3amoled50mm"/>
+            <iq:product id="gpsmaph1"/>
             <iq:product id="legacyherocaptainmarvel"/>
             <iq:product id="legacyherofirstavenger"/>
             <iq:product id="legacysagadarthvader"/>
@@ -75,10 +75,10 @@
             <iq:product id="venu441mm"/>
             <iq:product id="venu445mm"/>
             <iq:product id="venud"/>
-            <iq:product id="venusq"/>
             <iq:product id="venusq2"/>
             <iq:product id="venusq2m"/>
             <iq:product id="venusqm"/>
+            <iq:product id="venux1"/>
             <iq:product id="vivoactive4"/>
             <iq:product id="vivoactive4s"/>
             <iq:product id="vivoactive5"/>
