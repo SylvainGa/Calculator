@@ -396,31 +396,31 @@ class CalculatorView extends WatchUi.View {
                  Storage.setValue("answer", gAnswer);
             }
             if (gOpText != null && gText == null) {
-                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? width - 1 : width - (width / 3 - width / 6)), height / 5 - Graphics.getFontHeight(mUsingFontLine2) - 2, mUsingFontLine2, gOpText, Graphics.TEXT_JUSTIFY_RIGHT);
+                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? width - 1 : width - (width / 3 - width / 6)), height / 5 - Graphics.getFontHeight(mUsingFontLine2) + 1, mUsingFontLine2, gOpText, Graphics.TEXT_JUSTIFY_RIGHT);
             }
         }
 
         if (gText != null) {
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? width - 1 : width - (width / 3 - width / 6)), height / 5 - Graphics.getFontHeight(mUsingFontLine2) - 2, mUsingFontLine2, gText, Graphics.TEXT_JUSTIFY_RIGHT);
+            dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? width - 1 : width - (width / 3 - width / 6)), height / 5 - Graphics.getFontHeight(mUsingFontLine2) + 1, mUsingFontLine2, gText, Graphics.TEXT_JUSTIFY_RIGHT);
         }
         else if (mDelegate.mCalcMode == 1) {
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? width - 1 : width - (width / 3 - width / 6)), height / 5 - Graphics.getFontHeight(mUsingFontLine2) - 2, mUsingFontLine2, "S=" + mDelegate.mOps_pos, Graphics.TEXT_JUSTIFY_RIGHT);
+            dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? width - 1 : width - (width / 3 - width / 6)), height / 5 - Graphics.getFontHeight(mUsingFontLine2) + 1, mUsingFontLine2, "S=" + mDelegate.mOps_pos, Graphics.TEXT_JUSTIFY_RIGHT);
         }
         if (gMemory != null || gCurrentHistoryIncIndex != null || gStackHistory != null || gDataView) {
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
             if (gDataView) {
-                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(mUsingFontLine2) - 2, mUsingFontLine2, "D=" + (gDataViewPos + 1), Graphics.TEXT_JUSTIFY_LEFT);
+                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(mUsingFontLine2) + 1, mUsingFontLine2, "D=" + (gDataViewPos + 1), Graphics.TEXT_JUSTIFY_LEFT);
             }
             else if (gCurrentHistoryIncIndex != null) {
-                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(mUsingFontLine2) - 2, mUsingFontLine2, "H=" + gCurrentHistoryIncIndex, Graphics.TEXT_JUSTIFY_LEFT);
+                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(mUsingFontLine2) + 1, mUsingFontLine2, "H=" + gCurrentHistoryIncIndex, Graphics.TEXT_JUSTIFY_LEFT);
             }
             else if (gStackHistory != null) {
-                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(mUsingFontLine2) - 2, mUsingFontLine2, "S=" + gStackHistory, Graphics.TEXT_JUSTIFY_LEFT);
+                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(mUsingFontLine2) + 1, mUsingFontLine2, "S=" + gStackHistory, Graphics.TEXT_JUSTIFY_LEFT);
             }
             else {
-                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(mUsingFontLine2) - 2, mUsingFontLine2, "M=" + stripTrailingZeros(gMemory), Graphics.TEXT_JUSTIFY_LEFT);
+                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(mUsingFontLine2) + 1, mUsingFontLine2, "M=" + stripTrailingZeros(gMemory), Graphics.TEXT_JUSTIFY_LEFT);
             }
         }
     }
