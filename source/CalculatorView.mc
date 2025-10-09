@@ -112,15 +112,17 @@ class CalculatorView extends WatchUi.View {
         var fonts = [Graphics.FONT_XTINY, Graphics.FONT_TINY, Graphics.FONT_SMALL, Graphics.FONT_MEDIUM, Graphics.FONT_LARGE];
         var dcHeight = dc.getHeight();
         var dcWidth = dc.getWidth();
+        mDelegate.mHeight = dcHeight;
+        mDelegate.mWidth = dcWidth;
 
         for (var i = fonts.size() - 1; i >= 0 ; i--) {
             var fontHeight = Graphics.getFontHeight(fonts[i]); // Font for the result area (two lines in this area so half of a fifth of the screen)
-            if (mUsingFont[0] == null && fontHeight < dcHeight / 10) {
+            if (mUsingFont[0] == null && fontHeight < dcHeight * 3 / 20) {
                 mUsingFont[0] = fonts[i];
 
                 for (var j = i; j >= 0; j--) {
                     var fontHeightLine2 = Graphics.getFontHeight(fonts[j]);
-                    if (fontHeightLine2 < fontHeight) {
+                    if (fontHeightLine2 < dcHeight * 2 / 30) {
                         mUsingFontLine2 = fonts[j];
                         break;
                     }
@@ -394,31 +396,31 @@ class CalculatorView extends WatchUi.View {
                  Storage.setValue("answer", gAnswer);
             }
             if (gOpText != null && gText == null) {
-                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? width : width - (width / 3 - width / 6)), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, gOpText, Graphics.TEXT_JUSTIFY_RIGHT | Graphics.TEXT_JUSTIFY_VCENTER);
+                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? width - 1 : width - (width / 3 - width / 6)), height / 5 - Graphics.getFontHeight(mUsingFontLine2) - 2, mUsingFontLine2, gOpText, Graphics.TEXT_JUSTIFY_RIGHT);
             }
         }
 
         if (gText != null) {
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? width : width - (width / 3 - width / 6)), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, gText, Graphics.TEXT_JUSTIFY_RIGHT | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? width - 1 : width - (width / 3 - width / 6)), height / 5 - Graphics.getFontHeight(mUsingFontLine2) - 2, mUsingFontLine2, gText, Graphics.TEXT_JUSTIFY_RIGHT);
         }
         else if (mDelegate.mCalcMode == 1) {
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? width : width - (width / 3 - width / 6)), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, "S=" + mDelegate.mOps_pos, Graphics.TEXT_JUSTIFY_RIGHT | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? width - 1 : width - (width / 3 - width / 6)), height / 5 - Graphics.getFontHeight(mUsingFontLine2) - 2, mUsingFontLine2, "S=" + mDelegate.mOps_pos, Graphics.TEXT_JUSTIFY_RIGHT);
         }
         if (gMemory != null || gCurrentHistoryIncIndex != null || gStackHistory != null || gDataView) {
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
             if (gDataView) {
-                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, "D=" + (gDataViewPos + 1), Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(mUsingFontLine2) - 2, mUsingFontLine2, "D=" + (gDataViewPos + 1), Graphics.TEXT_JUSTIFY_LEFT);
             }
             else if (gCurrentHistoryIncIndex != null) {
                 dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(mUsingFontLine2) - 2, mUsingFontLine2, "H=" + gCurrentHistoryIncIndex, Graphics.TEXT_JUSTIFY_LEFT);
             }
             else if (gStackHistory != null) {
-                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, "S=" + gStackHistory, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(mUsingFontLine2) - 2, mUsingFontLine2, "S=" + gStackHistory, Graphics.TEXT_JUSTIFY_LEFT);
             }
             else {
-                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(Graphics.FONT_XTINY) / 2 + height / 70 - 2, Graphics.FONT_XTINY, "M=" + stripTrailingZeros(gMemory), Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(mUsingFontLine2) - 2, mUsingFontLine2, "M=" + stripTrailingZeros(gMemory), Graphics.TEXT_JUSTIFY_LEFT);
             }
         }
     }

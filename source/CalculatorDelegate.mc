@@ -47,6 +47,8 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
     var mOrgAnswer;
     var mFistEnterDetected;
     var mPrefilledFromStack;
+    var mWidth;
+    var mHeight;
 
     // Financial var
     var mPresentValue;
@@ -3138,14 +3140,14 @@ class CalculatorDelegate extends WatchUi.BehaviorDelegate {
     }
     
     function findTapPos(x, y) {
-        var width = System.getDeviceSettings().screenWidth;
+        var width = mWidth;
         var h_separation = width / 3;
-        var height = System.getDeviceSettings().screenHeight;
+        var height = mHeight;
         var v_separation = height / 5;
 
         for (var ty = v_separation, i = 0; ty <= height - v_separation * 2; ty += v_separation, i++) {
             for (var tx = 0, j = 0; tx <= width - h_separation; tx += h_separation, j++) {
-                if (x > tx && x < tx + h_separation && y > ty && y < ty + v_separation) {
+                if (x >= tx && x < tx + h_separation && y >= ty && y < ty + v_separation) {
                     return i * 3 + j + 1; 
                 }
             }
