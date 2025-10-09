@@ -64,8 +64,9 @@ If you like the widget, please consider [leaving a positive review](https://apps
 V1.8.0 Compiled with CIQ 8.3.0 and added the following
 - Fonts are dynamically chosen based on the largest text size of each panels.
 - Text is clipped so it doesn't overflow on the following button (issue with some devices when even the smallest font size is too big).
+- Corected button press boundaries for rectangle devices.
 - Venu X1, the eTrex and the GPSMAP H1 devices.
-- Removed VivoActive Square as it doesn't habe enough memory to run this widget/app
+- Removed VivoActive Square as it doesn't habe enough memory to run this widget/app.
 
 V1.7.13 Added the Venu4 41 and 45 mm devices
 
