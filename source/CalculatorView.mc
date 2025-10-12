@@ -47,6 +47,8 @@ class CalculatorView extends WatchUi.View {
     var mDelegate;
     var mUsingFont = new [7];
     var mUsingFontLine2;
+    var mThousandsSep;
+    var mDecimalSep;
 
     function initialize(delegate) {
         View.initialize();
@@ -71,6 +73,22 @@ class CalculatorView extends WatchUi.View {
         }
         catch (e) {
             Properties.setValue("panelOrder", "1,2,3,4,5,6");
+        }
+
+        mThousandsSep = 0;
+        try {
+            mThousandsSep = Properties.getValue("thousandsSep");
+        }
+        catch (e) {
+            Properties.setValue("thousandsSep", 0);
+        }
+
+        mDecimalSep = 0;
+        try {
+            mDecimalSep = Properties.getValue("decimalSep");
+        }
+        catch (e) {
+            Properties.setValue("mDecimalSep", 0);
         }
 
         if (panelOrderStr != null) {
@@ -106,6 +124,8 @@ class CalculatorView extends WatchUi.View {
                 }
             }
         }
+
+        WatchUi.requestUpdate();
     }
 
     function onLayout(dc) {
@@ -242,7 +262,7 @@ class CalculatorView extends WatchUi.View {
                     }
                 }
 
-                var dotOrE = " . ";
+                var dotOrE = mDecimalSep == 0 ? " . " : " , ";
                 if (gDataEntry && gAnswer != null && gAnswer.toString().find(".") != null) {
                     dotOrE = " E ";
                 }
@@ -391,7 +411,7 @@ class CalculatorView extends WatchUi.View {
         }
         else {
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(width / 2, screenShape == System.SCREEN_SHAPE_RECTANGLE ? height / 16 : height / 11, mUsingFont[0], (gDataEntry ? (gAnswer != null ? gAnswer : "0") : limitDigits(gAnswer != null ? gAnswer : "0")), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+            dc.drawText(width / 2, screenShape == System.SCREEN_SHAPE_RECTANGLE ? height / 16 : height / 11, mUsingFont[0], (gDataEntry ? (gAnswer != null ? display(gAnswer) : "0") : display(limitDigits(gAnswer != null ? gAnswer : "0"))), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
             if (gAnswer != null) {
                  Storage.setValue("answer", gAnswer);
             }
@@ -420,9 +440,68 @@ class CalculatorView extends WatchUi.View {
                 dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(mUsingFontLine2) + 1, mUsingFontLine2, "S=" + gStackHistory, Graphics.TEXT_JUSTIFY_LEFT);
             }
             else {
-                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(mUsingFontLine2) + 1, mUsingFontLine2, "M=" + stripTrailingZeros(gMemory), Graphics.TEXT_JUSTIFY_LEFT);
+                dc.drawText((screenShape == System.SCREEN_SHAPE_RECTANGLE ? 0 : width / 3 - width / 6), height / 5 - Graphics.getFontHeight(mUsingFontLine2) + 1, mUsingFontLine2, "M=" + display(stripTrailingZeros(gMemory)), Graphics.TEXT_JUSTIFY_LEFT);
             }
         }
+    }
+
+    function display(value) {
+        if (mThousandsSep == 0 && mDecimalSep == 0) { // If we keep the default, no point in trying to trandfor, return what we passed
+            return value;
+        }
+
+        var char = value.toCharArray();
+        var strlength = value.length();
+        var length = strlength;
+        var decimalPos = value.find(".");
+        var output = "";
+        var i = 0;
+        var first = true;
+
+        if (decimalPos != null) { // We have a decimal, what's before that decimal is what matters for the thousands separator
+            length = decimalPos;
+        }
+
+        if (char[0] == '-') { // If we have a preceeding minus symbol, push it to our output string and skip processing it
+            output = "-";
+            i = 1;
+            length--;
+        }
+
+        for (var j = length; j > 0 && i < strlength; j--, i++) { // Go through the input string (before the '.')
+            if (j % 3 == 0 && !first) {
+                // If we have a multitude of 3, add our separator
+                switch (mThousandsSep) {
+                    case 0:
+                        break;
+                    case 1:
+                        output += " ";
+                        break;
+                    case 2:
+                        output += ",";
+                        break;
+                }
+            }
+            output += char[i].toString();
+            first = false;
+        }
+
+        // If we had a decimal point, that's where we're at now, process it
+        if (decimalPos != null) {
+            switch (mDecimalSep) {
+                case 0:
+                    output += ".";
+                    break;
+                case 1:
+                    output += ",";
+                    break;
+            }
+
+            // Now add what's after the decimal point (if there is anything)
+            output += value.substring(decimalPos + 1, value.length());
+        }
+
+        return output;
     }
 
     function drawInside(dc, x, y, pos, text, perm_hilight, font) {

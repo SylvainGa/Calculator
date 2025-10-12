@@ -26,4 +26,10 @@
 	<string id="setting_calculationMode">Mode de calcules</string>
 	<string id="setting_calcBEDMAS">BEDMAS</string>
 	<string id="setting_calcRPN">RPN</string>
+	<string id="setting_thousandsSep">Séparateur de milliers</string>
+	<string id="setting_decimalSep">Séparateur décimal</string>
+	<string id="setting_nothing">Aucun</string>
+	<string id="setting_space">Espace ' '</string>
+	<string id="setting_comma">Virgule ','</string>
+	<string id="setting_period">Point '.'</string>
 </strings>

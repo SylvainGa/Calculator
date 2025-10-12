@@ -25,4 +25,18 @@
             <listEntry value="1">@Strings.setting_calcRPN</listEntry>
         </settingConfig>
     </setting>
+    <setting propertyKey="@Properties.thousandsSep" title="@Strings.setting_thousandsSep">
+        <settingConfig type="list">
+            <listEntry value="0">@Strings.setting_nothing</listEntry>
+            <listEntry value="1">@Strings.setting_space</listEntry>
+            <listEntry value="2">@Strings.setting_comma</listEntry>
+        </settingConfig>
+    </setting>
+
+    <setting propertyKey="@Properties.decimalSep" title="@Strings.setting_decimalSep">
+        <settingConfig type="list">
+            <listEntry value="0">@Strings.setting_period</listEntry>
+            <listEntry value="1">@Strings.setting_comma</listEntry>
+        </settingConfig>
+    </setting>
 </settings>

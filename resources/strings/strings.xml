@@ -1,6 +1,6 @@
 <strings>
     <string id="AppName">Calculator</string>
-    <string id="AppNameVersion" translatable="false">Calculator V1.8.0.b2</string>
+    <string id="AppNameVersion" translatable="false">Calculator V1.9.0.b1</string>
     <string id="shortComplicationLabel">Calc</string>
     <string id="longComplicationLabel">Calculator</string>
 
@@ -27,4 +27,10 @@
 	<string id="setting_calculationMode">Calculation mode</string>
 	<string id="setting_calcBEDMAS">BEDMAS</string>
 	<string id="setting_calcRPN">RPN</string>
+	<string id="setting_thousandsSep">Thousands separator</string>
+	<string id="setting_decimalSep">Decimal separator</string>
+	<string id="setting_nothing">Nothing</string>
+	<string id="setting_space">Space ' '</string>
+	<string id="setting_comma">Comma ','</string>
+	<string id="setting_period">Period '.'</string>
 </strings>

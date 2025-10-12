@@ -61,6 +61,9 @@ If you like the widget, please consider [leaving a positive review](https://apps
 
 ## Changelog
 
+V1.9.0 Added the following
+- New settings to configure the thousands and decimal separators. Type checking can't be done in Settings so don't set Comma for both thousands and decimal separators as it could get 'confusing'.
+
 V1.8.0 Compiled with CIQ 8.3.0 and added the following
 - Fonts are dynamically chosen based on the largest text size of each panels.
 - Text is clipped so it doesn't overflow on the following button (issue with some devices when even the smallest font size is too big).
