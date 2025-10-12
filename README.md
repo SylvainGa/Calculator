@@ -74,7 +74,7 @@ Add an haptic feedback when a touch is registered (for devices with haptic feedb
 If the app terminates before you had time to finish your calculation, if this is set, when launched again, you'll be right where you left. Defaults to Off.
 
 *Calculation mode*
-The app supports to method of performing calculation. BEDMAS and RPN. Default is BEDMAS. BEDMAS is the more common, usually refered to scientific mode and means the order of which operations are performed, Bracket first, then Exponent, followed by Divison/Multiplication and finally Addition/Substraction. In this mode, (3+5)*4+3^3 equals 59. The other mode is Reverse Polish Notation, which uses a stack to perform operations. In this mode, the 'history' (H=) is showned AFTER the 'stack' (S=). Values are pushed on the stack and then operations are performed om them. In the example above. You would enter 3 Enter 5 + 4 * 3 Enter 2 x^y +
+The app supports to method of performing calculation. BEDMAS and RPN. Default is BEDMAS. BEDMAS is the more common, usually refered to scientific mode and means the order of which operations are performed, Bracket first, then Exponent, followed by Divison/Multiplication and finally Addition/Substraction. In this mode, (3+5)*4+3^3 equals 59. The other mode is Reverse Polish Notation, which uses a stack to perform operations. In this mode, the 'history' (H=) is showned AFTER the 'stack' (S=). Values are pushed on the stack and then operations are performed om them. In the example above. You would enter 3 Enter 5 + 4 * 3 Enter 2 x^y +.
 
 *Thousands separator*
 How to separate the thousands. Choices are with nothing, with spaces or with commands. Defaults to nothing. 1234567.89 will appear as 1 234 567.89 or 1,234,567.89 with option2 or 3.
