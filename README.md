@@ -1,6 +1,6 @@
 # The Swiss army knife of calculators Widget
 
-The Swiss army knife of calculators Widget is a Garmin ConnectIQ widget to perform standard, scientific, unit conversion, loans/savings and statistical calculations on a touch-enabled watch using either BEDMAS or RPN calculation methods. Round and rectangular/square watches and Edges devices that have touch screens are supported
+The Swiss army knife of calculators Widget is a Garmin ConnectIQ widget to perform standard, scientific, unit conversion, loans/savings and statistical calculations on a touch-enabled watch using either BEDMAS or RPN calculation methods. Round and rectangular/square watches, Edges and MAP devices that have touch screens are supported.
 
 **If you enjoy this app, you can support my work with a small donation:**
 https://bit.ly/sylvainga
@@ -11,12 +11,12 @@ Install the widget from the [Connect IQ Store](https://apps.garmin.com/en-US/app
 
 ## Description
 
-The Swiss army knife of calculators allows to perform simple, scientific, unit conversion, loans/savings and statistical calculations from your touch-enabled watches using either BEDMAS or RPN calculation methods.
+The Swiss army knife of calculators allows to perform simple, scientific, unit conversion, loans/savings and statistical calculations from your touch-enabled devices using either BEDMAS or RPN calculation methods.
 
 Features include:
 
 - Six panels - Numbers, arithmetic, scientific, unit conversion, loans/savings and statistical;
-- The panel order is configurable through the app Settings;
+- The panel order is configurable through the app Settings (see below for the explanation of the Settings);
 - Can be used for BEDMAS (order of operations are Brackets, Exponent, Multiplication, Division, Addition and Substraction) or RPN (Reverse Polish Notation). There is enough place for over 50 pending operations in its buffer. You select between BEDMAS and RPN through the Apps settings on your phone or Garmin Express;
 - Includes a Memory function to store something for use later;
 - History of the last x result. You can choose to save from 0 to 50 results in the history buffer (defaults to 10). Settable in the app Settings;
@@ -31,19 +31,19 @@ Please raise an issue if anything doesn't work correctly, if you have issues wit
 
 ## Usage
 
-To use, simply launch it, preferably from a Glance. Reason is when launched from a Glance, gestures are available right away, instead of having to spawn a subview. If not launched from a Glance, you'll be asked to press the screen so the subview can be launched and activate the gestures. Sorry, that's a Garmin limitation.
+To use, simply launch it. The default panel is the first one in the panel order. Defaults to the numeric keypad (panel 1)
 
-Press any of the corresponding 'buttons' to activate it. There is no EQUAL (or Enter for RPN) button because THE TOP OF THE SCREEN acts as an EQUAL sign (in BEDMAS) or Enter (in RPN). TOUCH IT TO SIMULATE AN '=' (EQUAL) AND TERMINATE THE EQUATION in BEDMAS or to push the current data into the stack. In RPN, when the stack is empty, pressing '-' after a number, push the number into the stack and also changes it sign. Pressing '+' on an empty stack pushes the current value into the stack.
+Press any of the corresponding on screen 'buttons' to activate them. ***There is no EQUAL sign*** (or Enter for RPN) button because THE TOP OF THE SCREEN acts as an EQUAL sign (in BEDMAS) or Enter (in RPN). TOUCH IT TO SIMULATE AN '=' (EQUAL) AND TERMINATE THE EQUATION in BEDMAS or to push the current data into the stack. In RPN, when the stack is empty, pressing '-' after a number, push the number into the stack and also changes it sign. Pressing '+' on an empty stack pushes the current value into the stack.
 
-To enter an exponent, first press the '.' button if you haven't already entered a decimal point and the button will change to an 'E'. Press it followed by the corresponding exponent number.
+To enter an exponent, first press the '.' (or ',') button if you haven't already entered a decimal point and the button will change to an 'E'. Press it followed by the corresponding exponent number.
 
-You scroll through the history/RPN stack by a swipe down/up gesture. A swipe down moves forward in the history while an up gesture moves backward. The latest result is in Position 0 (H=0) as well as viewable from the Glance view. In RPN, you'll scroll through the stack BEFORE showing the history (S=). Th stack or history value displayed can be used as part of the current equation.
+You scroll through the history/RPN stack by a swipe down/up gesture. A swipe down moves forward in the history while an up gesture moves backward. The latest result is in Position 0 (H=0) as well as viewable from the Glance view. In RPN, you'll scroll through the stack BEFORE showing the history (S=). The stack or history value displayed can be used as part of the current equation.
 
 In RPN, to push a history value or stack into the stack, press the Result area when scrolling is active. Since there is no Equal sign in RPN to specify the end of an operation, to push a value onto the history, touch the Result area twice in succession. "Saved" will appear on screen to let you know the data was saved.
 
 You change panel by left and right swipes IN THE BUTTON AREA. Right swipes move forward in the panel order while left swipes move backward. The operators +, -, x, ÷ and CA will autoreturn to the number panel once pressed. In the settings, you can adjust the order of the panels.
 
-Swiping left or right in the result windows changes the decimal rounding of the value displayed. Maximum is 8 decimals after the '.'. The rounding chosen is saved and restored when you relaunch the app.
+Swiping left or right in the RESULT AREA changes the decimal rounding of the value displayed. Maximum is 8 decimals after the '.' (or ','). The rounding chosen is saved and restored when you relaunch the app.
 
 In BEDMAS, the calculator follows algebraic order of operations, unary operators are performed first (like x^2), followed by multiplications, divisions and "x power of y". Additions and subtractions are performed last (so 2+3*4 equals 14, not 20). These can be overridden by usage of parenthesis ( (2+3)*4 in this case is equal to 20). You can nest parenthesis to perform complex operations.
 
@@ -53,11 +53,36 @@ In the Scientific panel, INV can be used to toggle between sin, cos, tan, x^2 an
 
 In the Unit conversion panel, you can change the order of operation through the INV button. The IMP/USA button applies to Gallons and Cups.
 
-In the Loan/Savings panel, you fill the value you know (a * will appear beside a field that has a value) and then pressed Calc followed by the field you want to be calculated. Although only one of Present Value (PV) and DEP (Deposit) could be entered, the other fields must all be entered except for the field to find its value. For example, to find the Future Value (FV) of a Present Value (PV) of $1000, with a compound interest of 10% yearly (I/Y) after 5 Years (YEARS) with 1 Payment per year (P/Y), you fill these fields and then press Calc FV. See V1.1.0 below for more details.
+In the Loan/Savings panel, you fill the value you know (a * will appear beside a field that has a value) and then pressed Calc followed by the field you want to be calculated. Although only one of Present Value (PV) and DEP (Deposit) could be entered, the other fields must all be entered except for the field to find its value. For example, to find the Future Value (FV) of a Present Value (PV) of $1000, with a compound interest of 10% yearly (I/Y) after 5 Years (YEARS) with 1 Payment per year (P/Y), you fill these fields and then press Calc FV. See the changelog for V1.1.0 below for more details.
 
-In the Statistical panel, you enter the data one by one by pressing 'Add' after entering a data. If you want to delete an entry, type its value and press Del. The operations that can be performed are MEAN (The mean of the number set), SSDEV (Sample Standard Deviation), PSDEV (Population Standard Deviation), MEDIAN (The median of the number set), VARIAN (The variance of the number set), MODE (The mode of the number set) and RANGE (The range of the number set). Data entered survives an application close so if the app terminates before you have time to enter all your data, just continue where you left off. You need to press Reset then Del to erase the stored data. Pressing the View button acts just like the history buffer, allowing you to cycle between all the data you entered with an up/down gesture. See V1.2.0 below for more details.
+In the Statistical panel, you enter the data one by one by pressing 'Add' after entering a data. If you want to delete an entry, type its value and press Del. The operations that can be performed are MEAN (The mean of the number set), SSDEV (Sample Standard Deviation), PSDEV (Population Standard Deviation), MEDIAN (The median of the number set), VARIAN (The variance of the number set), MODE (The mode of the number set) and RANGE (The range of the number set). Data entered survives an application close so if the app terminates before you have time to enter all your data, just continue where you left off. You need to press Reset then Del to erase the stored data. Pressing the View button acts just like the history buffer, allowing you to cycle between all the data you entered with an up/down gesture. See the changelog for V1.2.0 below for more details.
 
 If you like the widget, please consider [leaving a positive review](https://apps.garmin.com/en-US/apps/5270a7c6-33c9-4114-8cc6-e513f6866440).
+
+## Explanation of the Settings
+
+*Size of history buffer*
+Size of the history buffer. Defaults to 10. Ranges from 0 (disables it) to 50. You acces them by swipping up or down.
+
+*Panel order*
+How should the panel be displayed when swipped. Defaults to 1,2,3,4,5,6. Personnally, I like the arithmetic and conversion panel to be readily accessible so I have it set to 1,2,4,5,6,3. So Conversion is a swipe right from the keypad.
+
+*Vibrate on touch*
+Add an haptic feedback when a touch is registered (for devices with haptic feedback). Defaults to Off.
+
+*Restore unfinished calculations on next launch*
+If the app terminates before you had time to finish your calculation, if this is set, when launched again, you'll be right where you left. Defaults to Off.
+
+*Calculation mode*
+The app supports to method of performing calculation. BEDMAS and RPN. Default is BEDMAS. BEDMAS is the more common, usually refered to scientific mode and means the order of which operations are performed, Bracket first, then Exponent, followed by Divison/Multiplication and finally Addition/Substraction. In this mode, (3+5)*4+3^3 equals 59. The other mode is Reverse Polish Notation, which uses a stack to perform operations. In this mode, the 'history' (H=) is showned AFTER the 'stack' (S=). Values are pushed on the stack and then operations are performed om them. In the example above. You would enter 3 Enter 5 + 4 * 3 Enter 2 x^y +
+
+*Thousands separator*
+How to separate the thousands. Choices are with nothing, with spaces or with commands. Defaults to nothing. 1234567.89 will appear as 1 234 567.89 or 1,234,567.89 with option2 or 3.
+
+*Decimal separator*
+What to to use to separate the whole number part from the fraction part. Defaults to a period '.' and the other option is a comma ','. So 1.23 would be shown as 1,23 with the second option.
+
+Note: Keep in mind that the Settings cannot do any checking so if you select a comma for both the thousands and decimal separator, you would have a hard time figuring what is what.
 
 ## Changelog
 
