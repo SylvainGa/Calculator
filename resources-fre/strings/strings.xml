@@ -32,4 +32,5 @@
 	<string id="setting_space">Espace ' '</string>
 	<string id="setting_comma">Virgule ','</string>
 	<string id="setting_period">Point '.'</string>
+	<string id="setting_glance_result">Afficher le dernier résultat en mode aperçu rapide</string>
 </strings>

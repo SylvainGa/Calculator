@@ -1,16 +1,29 @@
 import Toybox.WatchUi;
 import Toybox.Graphics;
 import Toybox.Application.Storage;
+import Toybox.Application.Properties;
 
 (:glance)
 class GlanceView extends WatchUi.GlanceView {
     var _usingFont;
+    var _showResult;
 
     function initialize() {
         GlanceView.initialize();
+        onSettingsChanged();
     }
 
     function onSettingsChanged() {
+        
+        try {
+            _showResult = Properties.getValue("showResultInGlance");
+        }
+        catch (e) {
+            Properties.setValue("showResultInGlance", true);
+            _showResult = true;
+        }
+
+        WatchUi.requestUpdate();
     }
     
     function onLayout(dc) {
@@ -33,6 +46,6 @@ class GlanceView extends WatchUi.GlanceView {
         var answer = Storage.getValue("answer");
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(0, dc.getHeight() / 2, _usingFont, (answer != null ? WatchUi.loadResource(Rez.Strings.label_calculator1) + limitDigits(answer) : WatchUi.loadResource(Rez.Strings.label_calculator2)), Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(0, dc.getHeight() / 2, _usingFont, (answer != null && _showResult == true ? WatchUi.loadResource(Rez.Strings.label_calculator1) + limitDigits(answer) : WatchUi.loadResource(Rez.Strings.label_calculator2)), Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
     }
 }

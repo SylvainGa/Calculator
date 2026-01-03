@@ -7,4 +7,5 @@
 	<property id="calculationMode" type="number">0</property>
 	<property id="thousandsSep" type="number">0</property>
 	<property id="decimalSep" type="number">0</property>
+	<property id="showResultInGlance" type="boolean">true</property>
 </properties>

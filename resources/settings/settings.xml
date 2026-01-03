@@ -39,4 +39,10 @@
             <listEntry value="1">@Strings.setting_comma</listEntry>
         </settingConfig>
     </setting>
+
+    <setting propertyKey="@Properties.showResultInGlance" title="@Strings.setting_glance_result">
+		<settingConfig type="boolean" required="true"/>
+    </setting>
+
+
 </settings>

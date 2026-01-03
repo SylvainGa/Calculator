@@ -86,6 +86,9 @@ Note: Keep in mind that the Settings cannot do any checking so if you select a c
 
 ## Changelog
 
+V1.10 Compiled with CIQ 8.4.0 and added the following
+- Showing the last result on the Glance view can be turned off (on by default) by deselecting "Show last result in Glance view".
+
 V1.9.0 Added the following
 - New settings to configure the thousands and decimal separators. Type checking can't be done in Settings so don't set Comma for both thousands and decimal separators as it could get 'confusing'.
 
